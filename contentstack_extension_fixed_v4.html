@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Extension Field - Contentstack</title>
+    
+    <style>
+        /* Reset e base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+            background: #fff;
+            padding: 16px;
+        }
+
+        /* Container principal */
+        .extension-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Seção de categoria */
+        .category-section {
+            margin-bottom: 24px;
+        }
+
+        .category-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        /* Custom dropdown styling */
+        .category-dropdown-container {
+            position: relative;
+        }
+
+        .category-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .category-select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .category-select:hover {
+            border-color: #bdc3c7;
+        }
+
+        /* Custom option styling with CSS */
+        .category-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e1e8ed;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .category-options.show {
+            display: block;
+        }
+
+        .category-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .category-option:last-child {
+            border-bottom: none;
+        }
+
+        .category-option:hover {
+            background: #f8f9fa;
+        }
+
+        .category-option.selected {
+            background: #e3f2fd;
+            color: #1976d2;
+            font-weight: 500;
+        }
+
+        /* Status indicators */
+        .category-status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-badge.configured {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-badge.empty {
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+
+        .status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .status-icon.configured {
+            background: #4caf50;
+            position: relative;
+        }
+
+        .status-icon.configured::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .status-icon.empty {
+            background: #e0e0e0;
+        }
+
+        /* Selected category display */
+        .selected-category-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .selected-category-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-mini-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .category-mini-badge.configured {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        /* Seção de layouts */
+        .layout-section {
+            margin-bottom: 24px;
+        }
+
+        .layout-section.hidden {
+            display: none;
+        }
+
+        .layout-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #2c3e50;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* Seletores de layout */
+        .layout-selector {
+            background: #e91e63;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .layout-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+        }
+
+        .layout-selector.selected {
+            background: #2196f3;
+            border-color: #1976d2;
+        }
+
+        .layout-selector.selected:hover {
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+        }
+
+        /* Representações visuais dos layouts */
+        .layout-visual {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Layout 1 - Retângulo vertical */
+        .layout-1 .layout-visual {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .layout-1 .layout-visual::before {
+            content: '';
+            width: 30px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+        }
+
+        /* Layout 2 - Dois retângulos empilhados */
+        .layout-2 .layout-visual {
+            justify-content: space-between;
+        }
+
+        .layout-2 .layout-visual::before,
+        .layout-2 .layout-visual::after {
+            content: '';
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+        }
+
+        .layout-2 .layout-visual::before {
+            height: 35px;
+        }
+
+        .layout-2 .layout-visual::after {
+            height: 20px;
+        }
+
+        /* Layout 3 - Um horizontal + dois verticais */
+        .layout-3 .layout-visual {
+            gap: 6px;
+        }
+
+        .layout-3 .layout-visual::before {
+            content: '';
+            width: 100%;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+        }
+
+        .layout-3 .layout-visual::after {
+            content: '';
+            display: flex;
+            gap: 4px;
+            height: 25px;
+        }
+
+        .layout-3 .layout-visual::after {
+            background: linear-gradient(to right, 
+                rgba(255, 255, 255, 0.8) 0%, 
+                rgba(255, 255, 255, 0.8) 48%, 
+                transparent 48%, 
+                transparent 52%, 
+                rgba(255, 255, 255, 0.8) 52%, 
+                rgba(255, 255, 255, 0.8) 100%);
+            border-radius: 4px;
+        }
+
+        /* Layout 4 - Três retângulos empilhados */
+        .layout-4 .layout-visual {
+            justify-content: space-between;
+        }
+
+        .layout-4 .layout-visual::before {
+            content: '';
+            width: 100%;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+            box-shadow: 
+                0 20px 0 rgba(255, 255, 255, 0.8),
+                0 40px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .layout-label {
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Seção de campos */
+        .fields-section {
+            margin-top: 24px;
+        }
+
+        .fields-section.hidden {
+            display: none;
+        }
+
+        .field-group {
+            margin-bottom: 20px;
+        }
+
+        .field-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #2c3e50;
+        }
+
+        .field-input,
+        .field-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .field-input:focus,
+        .field-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        .field-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* Bullets section */
+        .bullets-container {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 16px;
+            background: #f9f9f9;
+        }
+
+        .bullet-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .bullet-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .bullet-icon {
+            flex: 0 0 120px;
+        }
+
+        .bullet-text {
+            flex: 1;
+        }
+
+        /* Cards section */
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-item {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 16px;
+            background: #f9f9f9;
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+
+        .card-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Layout específico para cards lado a lado em telas maiores */
+        @media (min-width: 768px) {
+            .layout-2-cards {
+                flex-direction: row;
+            }
+            
+            .layout-2-cards .card-item {
+                flex: 1;
+            }
+        }
+
+        /* Utility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .mb-small {
+            margin-bottom: 8px;
+        }
+
+        .mb-medium {
+            margin-bottom: 16px;
+        }
+
+        .text-small {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Category status indicator */
+        .category-status {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+
+        .category-status.has-data {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border-color: #c8e6c9;
+        }
+    </style>
+</head>
+<body>
+    <div class="extension-container">
+        <!-- Seção de Categoria -->
+        <div class="category-section">
+            <label for="category-select">Selecione a Categoria:</label>
+            <div class="category-dropdown-container">
+                <div id="category-select" class="category-select">
+                    <div class="selected-category-display">
+                        <span id="selected-category-text">-- Escolha uma categoria --</span>
+                    </div>
+                </div>
+                <div id="category-options" class="category-options">
+                    <div class="category-option" data-value="">
+                        <span>-- Escolha uma categoria --</span>
+                    </div>
+                    <div class="category-option" data-value="Crédito">
+                        <span>Crédito</span>
+                        <div class="category-status-indicator">
+                            <div class="status-icon empty"></div>
+                            <span class="status-badge empty">Vazio</span>
+                        </div>
+                    </div>
+                    <div class="category-option" data-value="Débito">
+                        <span>Débito</span>
+                        <div class="category-status-indicator">
+                            <div class="status-icon empty"></div>
+                            <span class="status-badge empty">Vazio</span>
+                        </div>
+                    </div>
+                    <div class="category-option" data-value="Benefícios">
+                        <span>Benefícios</span>
+                        <div class="category-status-indicator">
+                            <div class="status-icon empty"></div>
+                            <span class="status-badge empty">Vazio</span>
+                        </div>
+                    </div>
+                    <div class="category-option" data-value="Proteção">
+                        <span>Proteção</span>
+                        <div class="category-status-indicator">
+                            <div class="status-icon empty"></div>
+                            <span class="status-badge empty">Vazio</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="category-status" class="category-status hidden"></div>
+        </div>
+
+        <!-- Seção de Layouts -->
+        <div id="layout-section" class="layout-section hidden">
+            <h3>Escolha o Layout:</h3>
+            <div class="layout-grid">
+                <div class="layout-selector layout-1" data-layout="1">
+                    <div class="layout-visual"></div>
+                    <div class="layout-label">Layout 1</div>
+                </div>
+                <div class="layout-selector layout-2" data-layout="2">
+                    <div class="layout-visual"></div>
+                    <div class="layout-label">Layout 2</div>
+                </div>
+                <div class="layout-selector layout-3" data-layout="3">
+                    <div class="layout-visual"></div>
+                    <div class="layout-label">Layout 3</div>
+                </div>
+                <div class="layout-selector layout-4" data-layout="4">
+                    <div class="layout-visual"></div>
+                    <div class="layout-label">Layout 4</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campos do Layout 1 -->
+        <div id="fields-layout-1" class="fields-section hidden">
+            <div class="field-group">
+                <label for="layout1-title">Título:</label>
+                <input type="text" id="layout1-title" class="field-input" placeholder="Digite o título">
+            </div>
+            
+            <div class="field-group">
+                <label>Bullets (até 3 itens):</label>
+                <div class="bullets-container">
+                    <div class="bullet-item">
+                        <div class="bullet-icon">
+                            <input type="text" id="layout1-bullet1-icon" class="field-input" placeholder="Ícone 1">
+                        </div>
+                        <div class="bullet-text">
+                            <input type="text" id="layout1-bullet1-text" class="field-input" placeholder="Texto 1">
+                        </div>
+                    </div>
+                    <div class="bullet-item">
+                        <div class="bullet-icon">
+                            <input type="text" id="layout1-bullet2-icon" class="field-input" placeholder="Ícone 2">
+                        </div>
+                        <div class="bullet-text">
+                            <input type="text" id="layout1-bullet2-text" class="field-input" placeholder="Texto 2">
+                        </div>
+                    </div>
+                    <div class="bullet-item">
+                        <div class="bullet-icon">
+                            <input type="text" id="layout1-bullet3-icon" class="field-input" placeholder="Ícone 3">
+                        </div>
+                        <div class="bullet-text">
+                            <input type="text" id="layout1-bullet3-text" class="field-input" placeholder="Texto 3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="field-group">
+                <label for="layout1-description">Descrição:</label>
+                <textarea id="layout1-description" class="field-textarea" placeholder="Digite a descrição"></textarea>
+            </div>
+        </div>
+
+        <!-- Campos do Layout 2 -->
+        <div id="fields-layout-2" class="fields-section hidden">
+            <div class="cards-container layout-2-cards">
+                <div class="card-item">
+                    <div class="card-title">Card 1</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout2-card1-bg">Imagem de Background:</label>
+                            <input type="text" id="layout2-card1-bg" class="field-input" placeholder="URL da imagem">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout2-card1-text">Texto:</label>
+                            <input type="text" id="layout2-card1-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout2-card1-deeplink">Deeplink:</label>
+                            <input type="text" id="layout2-card1-deeplink" class="field-input" placeholder="URL do deeplink">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-item">
+                    <div class="card-title">Card 2</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout2-card2-icon">Ícone:</label>
+                            <input type="text" id="layout2-card2-icon" class="field-input" placeholder="Ícone do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout2-card2-text">Texto:</label>
+                            <input type="text" id="layout2-card2-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campos do Layout 3 -->
+        <div id="fields-layout-3" class="fields-section hidden">
+            <div class="cards-container">
+                <div class="card-item">
+                    <div class="card-title">Card 1</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout3-card1-icon">Ícone:</label>
+                            <input type="text" id="layout3-card1-icon" class="field-input" placeholder="Ícone do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout3-card1-text">Texto:</label>
+                            <input type="text" id="layout3-card1-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout3-card1-deeplink">Deeplink:</label>
+                            <input type="text" id="layout3-card1-deeplink" class="field-input" placeholder="URL do deeplink">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-item">
+                    <div class="card-title">Card 2</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout3-card2-icon">Ícone:</label>
+                            <input type="text" id="layout3-card2-icon" class="field-input" placeholder="Ícone do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout3-card2-text">Texto:</label>
+                            <input type="text" id="layout3-card2-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout3-card2-deeplink">Deeplink:</label>
+                            <input type="text" id="layout3-card2-deeplink" class="field-input" placeholder="URL do deeplink">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-item">
+                    <div class="card-title">Card 3</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout3-card3-icon">Ícone:</label>
+                            <input type="text" id="layout3-card3-icon" class="field-input" placeholder="Ícone do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout3-card3-text">Texto:</label>
+                            <input type="text" id="layout3-card3-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout3-card3-deeplink">Deeplink:</label>
+                            <input type="text" id="layout3-card3-deeplink" class="field-input" placeholder="URL do deeplink">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campos do Layout 4 -->
+        <div id="fields-layout-4" class="fields-section hidden">
+            <div class="cards-container">
+                <div class="card-item">
+                    <div class="card-title">Card 1</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout4-card1-icon">Ícone:</label>
+                            <input type="text" id="layout4-card1-icon" class="field-input" placeholder="Ícone do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout4-card1-text">Texto:</label>
+                            <input type="text" id="layout4-card1-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout4-card1-deeplink">Deeplink:</label>
+                            <input type="text" id="layout4-card1-deeplink" class="field-input" placeholder="URL do deeplink">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-item">
+                    <div class="card-title">Card 2</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout4-card2-icon">Ícone:</label>
+                            <input type="text" id="layout4-card2-icon" class="field-input" placeholder="Ícone do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout4-card2-text">Texto:</label>
+                            <input type="text" id="layout4-card2-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout4-card2-deeplink">Deeplink:</label>
+                            <input type="text" id="layout4-card2-deeplink" class="field-input" placeholder="URL do deeplink">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-item">
+                    <div class="card-title">Card 3</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="layout4-card3-icon">Ícone:</label>
+                            <input type="text" id="layout4-card3-icon" class="field-input" placeholder="Ícone do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout4-card3-text">Texto:</label>
+                            <input type="text" id="layout4-card3-text" class="field-input" placeholder="Texto do card">
+                        </div>
+                        <div class="field-group">
+                            <label for="layout4-card3-deeplink">Deeplink:</label>
+                            <input type="text" id="layout4-card3-deeplink" class="field-input" placeholder="URL do deeplink">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@contentstack/ui-extensions-sdk/dist/ui-extension-sdk.js"></script>
+    <script>
+        // Variáveis globais
+        let allCategoriesData = {};
+        let currentCategory = '';
+        let isDropdownOpen = false;
+        let extension = null;
+
+        // Elementos DOM
+        const categorySelect = document.getElementById('category-select');
+        const categoryOptions = document.getElementById('category-options');
+        const selectedCategoryText = document.getElementById('selected-category-text');
+        const categoryStatus = document.getElementById('category-status');
+        const layoutSection = document.getElementById('layout-section');
+        const layoutSelectors = document.querySelectorAll('.layout-selector');
+        const fieldsContainers = document.querySelectorAll('.fields-section');
+
+        /**
+         * Verifica se uma categoria está completamente configurada
+         */
+        function isCategoryFullyConfigured(category) {
+            const categoryData = allCategoriesData[category];
+            if (!categoryData || !categoryData.layout || !categoryData.data) {
+                return false;
+            }
+
+            const layoutId = categoryData.layout;
+            const data = categoryData.data;
+
+            switch (layoutId) {
+                case 1:
+                    // Layout 1: título obrigatório, pelo menos 1 bullet com ícone e texto, descrição obrigatória
+                    if (!data.title || !data.title.trim()) return false;
+                    if (!data.description || !data.description.trim()) return false;
+                    
+                    // Verificar se pelo menos 1 bullet está preenchido
+                    const validBullets = data.bullets?.filter(bullet => 
+                        bullet.icon && bullet.icon.trim() && bullet.text && bullet.text.trim()
+                    ) || [];
+                    return validBullets.length > 0;
+
+                case 2:
+                    // Layout 2: Card 1 (texto obrigatório) e Card 2 (ícone e texto obrigatórios)
+                    if (!data.card1?.text || !data.card1.text.trim()) return false;
+                    if (!data.card2?.icon || !data.card2.icon.trim()) return false;
+                    if (!data.card2?.text || !data.card2.text.trim()) return false;
+                    return true;
+
+                case 3:
+                case 4:
+                    // Layout 3 e 4: Todos os 3 cards devem ter ícone e texto preenchidos
+                    if (!Array.isArray(data) || data.length !== 3) return false;
+                    
+                    return data.every(card => 
+                        card.icon && card.icon.trim() && 
+                        card.text && card.text.trim()
+                    );
+
+                default:
+                    return false;
+            }
+        }
+
+        /**
+         * Atualiza o status da categoria
+         */
+        function updateCategoryStatus(category) {
+            if (!category) {
+                categoryStatus.classList.add('hidden');
+                return;
+            }
+
+            const isConfigured = isCategoryFullyConfigured(category);
+            categoryStatus.classList.remove('hidden');
+            
+            if (isConfigured) {
+                categoryStatus.classList.add('has-data');
+                categoryStatus.textContent = `✓ Categoria "${category}" está completamente configurada`;
+            } else {
+                categoryStatus.classList.remove('has-data');
+                const categoryData = allCategoriesData[category];
+                if (categoryData && categoryData.layout > 0) {
+                    categoryStatus.textContent = `Categoria "${category}" selecionada - complete todos os campos obrigatórios`;
+                } else {
+                    categoryStatus.textContent = `Categoria "${category}" selecionada - escolha um layout`;
+                }
+            }
+        }
+
+        /**
+         * Atualiza os indicadores visuais das opções
+         */
+        function updateCategoryOptionsDisplay() {
+            const options = categoryOptions.querySelectorAll('.category-option[data-value]');
+            
+            options.forEach(option => {
+                const category = option.dataset.value;
+                if (!category) return;
+                
+                const isConfigured = isCategoryFullyConfigured(category);
+                const statusIcon = option.querySelector('.status-icon');
+                const statusBadge = option.querySelector('.status-badge');
+                
+                if (isConfigured) {
+                    statusIcon.classList.remove('empty');
+                    statusIcon.classList.add('configured');
+                    statusBadge.classList.remove('empty');
+                    statusBadge.classList.add('configured');
+                    statusBadge.textContent = 'Configurado';
+                } else {
+                    statusIcon.classList.remove('configured');
+                    statusIcon.classList.add('empty');
+                    statusBadge.classList.remove('configured');
+                    statusBadge.classList.add('empty');
+                    statusBadge.textContent = 'Vazio';
+                }
+            });
+        }
+
+        /**
+         * Atualiza o display da categoria selecionada
+         */
+        function updateSelectedCategoryDisplay(category) {
+            if (!category) {
+                selectedCategoryText.innerHTML = '-- Escolha uma categoria --';
+                return;
+            }
+
+            const isConfigured = isCategoryFullyConfigured(category);
+            
+            if (isConfigured) {
+                selectedCategoryText.innerHTML = `
+                    <div class="selected-category-text">
+                        <span>${category}</span>
+                        <span class="category-mini-badge configured">
+                            <div class="status-icon configured"></div>
+                            Configurado
+                        </span>
+                    </div>
+                `;
+            } else {
+                selectedCategoryText.innerHTML = `
+                    <div class="selected-category-text">
+                        <span>${category}</span>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * Inicialização da extensão
+         */
+        function initExtension() {
+            // Tentar inicializar SDK do Contentstack
+            if (typeof ContentstackUIExtension !== 'undefined') {
+                ContentstackUIExtension.init().then((ext) => {
+                    extension = ext;
+                    
+                    // Carregar dados existentes
+                    const existingData = extension.field.getData();
+                    if (existingData && typeof existingData === 'object') {
+                        allCategoriesData = existingData;
+                    }
+                    
+                    setupEventListeners();
+                    updateCategoryOptionsDisplay();
+                    
+                    console.log('Extensão Contentstack inicializada com sucesso');
+                }).catch((error) => {
+                    console.error('Erro ao inicializar SDK do Contentstack:', error);
+                    initStandaloneMode();
+                });
+            } else {
+                console.log('SDK do Contentstack não encontrado, iniciando modo standalone');
+                initStandaloneMode();
+            }
+        }
+
+        /**
+         * Inicialização em modo standalone (fallback)
+         */
+        function initStandaloneMode() {
+            // Carregar dados do localStorage se existirem
+            loadData();
+            
+            // Configurar event listeners
+            setupEventListeners();
+            
+            // Atualizar displays iniciais
+            updateCategoryOptionsDisplay();
+            
+            console.log('Extensão inicializada em modo standalone');
+        }
+
+        /**
+         * Carrega dados existentes do localStorage (modo standalone)
+         */
+        function loadData() {
+            const stored = localStorage.getItem('contentstack-extension-categories-data');
+            
+            if (stored) {
+                try {
+                    allCategoriesData = JSON.parse(stored);
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    allCategoriesData = {};
+                }
+            }
+        }
+
+        /**
+         * Configura todos os event listeners
+         */
+        function setupEventListeners() {
+            // Dropdown personalizado
+            categorySelect.addEventListener('click', toggleDropdown);
+            
+            // Opções do dropdown
+            const options = categoryOptions.querySelectorAll('.category-option');
+            options.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectCategory(option.dataset.value);
+                });
+            });
+            
+            // Fechar dropdown ao clicar fora
+            document.addEventListener('click', (e) => {
+                if (!categorySelect.contains(e.target) && !categoryOptions.contains(e.target)) {
+                    closeDropdown();
+                }
+            });
+            
+            // Seleção de layout
+            layoutSelectors.forEach(selector => {
+                selector.addEventListener('click', handleLayoutSelection);
+            });
+            
+            // Mudanças nos campos de formulário
+            document.addEventListener('input', handleFieldChange);
+            document.addEventListener('change', handleFieldChange);
+        }
+
+        /**
+         * Alterna o dropdown
+         */
+        function toggleDropdown() {
+            if (isDropdownOpen) {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        }
+
+        /**
+         * Abre o dropdown
+         */
+        function openDropdown() {
+            categoryOptions.classList.add('show');
+            isDropdownOpen = true;
+            updateCategoryOptionsDisplay();
+        }
+
+        /**
+         * Fecha o dropdown
+         */
+        function closeDropdown() {
+            categoryOptions.classList.remove('show');
+            isDropdownOpen = false;
+        }
+
+        /**
+         * Seleciona uma categoria
+         */
+        function selectCategory(selectedCategory) {
+            // Salvar dados da categoria anterior se houver
+            if (currentCategory && getCurrentCategoryData().layout > 0) {
+                saveCurrentCategoryData();
+            }
+            
+            currentCategory = selectedCategory;
+            
+            // Atualizar seleção visual
+            const options = categoryOptions.querySelectorAll('.category-option');
+            options.forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.value === selectedCategory) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Atualizar display
+            updateSelectedCategoryDisplay(selectedCategory);
+            closeDropdown();
+            
+            if (selectedCategory) {
+                // Inicializar dados da categoria se não existir
+                if (!allCategoriesData[selectedCategory]) {
+                    allCategoriesData[selectedCategory] = {
+                        layout: 0,
+                        data: {}
+                    };
+                }
+                
+                showLayoutSection();
+                loadCategoryData(selectedCategory);
+                updateCategoryStatus(selectedCategory);
+            } else {
+                hideLayoutSection();
+                hideAllFieldsContainers();
+                clearLayoutSelection();
+                updateCategoryStatus('');
+            }
+            
+            updateCategoryOptionsDisplay();
+            saveData();
+        }
+
+        /**
+         * Carrega dados de uma categoria específica
+         */
+        function loadCategoryData(category) {
+            const categoryData = allCategoriesData[category];
+            
+            if (categoryData && categoryData.layout > 0) {
+                // Restaurar layout selecionado
+                selectLayout(categoryData.layout);
+                showFieldsContainer(categoryData.layout);
+                populateFields(categoryData.layout, categoryData.data);
+            } else {
+                // Limpar seleções se não há dados
+                clearLayoutSelection();
+                hideAllFieldsContainers();
+            }
+        }
+
+        /**
+         * Obtém dados da categoria atual
+         */
+        function getCurrentCategoryData() {
+            return allCategoriesData[currentCategory] || { layout: 0, data: {} };
+        }
+
+        /**
+         * Salva dados da categoria atual
+         */
+        function saveCurrentCategoryData() {
+            if (!currentCategory) return;
+            
+            const categoryData = getCurrentCategoryData();
+            if (categoryData.layout > 0) {
+                categoryData.data = collectFieldData(categoryData.layout);
+                allCategoriesData[currentCategory] = categoryData;
+            }
+        }
+
+        /**
+         * Manipula seleção de layout
+         */
+        function handleLayoutSelection(event) {
+            const layoutId = parseInt(event.currentTarget.dataset.layout);
+            
+            if (!currentCategory) return;
+            
+            selectLayout(layoutId);
+            
+            // Atualizar dados da categoria atual
+            if (!allCategoriesData[currentCategory]) {
+                allCategoriesData[currentCategory] = { layout: 0, data: {} };
+            }
+            
+            allCategoriesData[currentCategory].layout = layoutId;
+            allCategoriesData[currentCategory].data = getDefaultDataForLayout(layoutId);
+            
+            showFieldsContainer(layoutId);
+            populateFields(layoutId, allCategoriesData[currentCategory].data);
+            
+            updateCategoryStatus(currentCategory);
+            updateCategoryOptionsDisplay();
+            updateSelectedCategoryDisplay(currentCategory);
+            saveData();
+            
+            // Auto-resize para Contentstack
+            if (extension && extension.window && extension.window.updateHeight) {
+                setTimeout(() => {
+                    extension.window.updateHeight();
+                }, 100);
+            }
+        }
+
+        /**
+         * Manipula mudanças nos campos
+         */
+        function handleFieldChange(event) {
+            if (!event.target.classList.contains('field-input') && 
+                !event.target.classList.contains('field-textarea')) {
+                return;
+            }
+            
+            if (currentCategory && getCurrentCategoryData().layout > 0) {
+                saveCurrentCategoryData();
+                updateCategoryOptionsDisplay();
+                updateSelectedCategoryDisplay(currentCategory);
+                updateCategoryStatus(currentCategory);
+                saveData();
+            }
+        }
+
+        /**
+         * Mostra a seção de seleção de layout
+         */
+        function showLayoutSection() {
+            layoutSection.classList.remove('hidden');
+        }
+
+        /**
+         * Esconde a seção de seleção de layout
+         */
+        function hideLayoutSection() {
+            layoutSection.classList.add('hidden');
+        }
+
+        /**
+         * Seleciona um layout visualmente
+         */
+        function selectLayout(layoutId) {
+            // Remove seleção anterior
+            layoutSelectors.forEach(selector => {
+                selector.classList.remove('selected');
+            });
+            
+            // Adiciona seleção ao layout atual
+            const selectedLayout = document.querySelector(`[data-layout="${layoutId}"]`);
+            if (selectedLayout) {
+                selectedLayout.classList.add('selected');
+            }
+        }
+
+        /**
+         * Limpa seleção de layout
+         */
+        function clearLayoutSelection() {
+            layoutSelectors.forEach(selector => {
+                selector.classList.remove('selected');
+            });
+        }
+
+        /**
+         * Mostra container de campos para um layout específico
+         */
+        function showFieldsContainer(layoutId) {
+            hideAllFieldsContainers();
+            
+            const container = document.getElementById(`fields-layout-${layoutId}`);
+            if (container) {
+                container.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Esconde todos os containers de campos
+         */
+        function hideAllFieldsContainers() {
+            fieldsContainers.forEach(container => {
+                container.classList.add('hidden');
+            });
+        }
+
+        /**
+         * Retorna dados padrão para um layout
+         */
+        function getDefaultDataForLayout(layoutId) {
+            switch (layoutId) {
+                case 1:
+                    return {
+                        title: '',
+                        bullets: [
+                            { icon: '', text: '' },
+                            { icon: '', text: '' },
+                            { icon: '', text: '' }
+                        ],
+                        description: ''
+                    };
+                case 2:
+                    return {
+                        card1: { background: '', text: '', deeplink: '' },
+                        card2: { icon: '', text: '' }
+                    };
+                case 3:
+                case 4:
+                    return [
+                        { icon: '', text: '', deeplink: '' },
+                        { icon: '', text: '', deeplink: '' },
+                        { icon: '', text: '', deeplink: '' }
+                    ];
+                default:
+                    return {};
+            }
+        }
+
+        /**
+         * Coleta dados dos campos para um layout específico
+         */
+        function collectFieldData(layoutId) {
+            switch (layoutId) {
+                case 1:
+                    return {
+                        title: document.getElementById('layout1-title').value,
+                        bullets: [
+                            {
+                                icon: document.getElementById('layout1-bullet1-icon').value,
+                                text: document.getElementById('layout1-bullet1-text').value
+                            },
+                            {
+                                icon: document.getElementById('layout1-bullet2-icon').value,
+                                text: document.getElementById('layout1-bullet2-text').value
+                            },
+                            {
+                                icon: document.getElementById('layout1-bullet3-icon').value,
+                                text: document.getElementById('layout1-bullet3-text').value
+                            }
+                        ],
+                        description: document.getElementById('layout1-description').value
+                    };
+                case 2:
+                    return {
+                        card1: {
+                            background: document.getElementById('layout2-card1-bg').value,
+                            text: document.getElementById('layout2-card1-text').value,
+                            deeplink: document.getElementById('layout2-card1-deeplink').value
+                        },
+                        card2: {
+                            icon: document.getElementById('layout2-card2-icon').value,
+                            text: document.getElementById('layout2-card2-text').value
+                        }
+                    };
+                case 3:
+                    return [
+                        {
+                            icon: document.getElementById('layout3-card1-icon').value,
+                            text: document.getElementById('layout3-card1-text').value,
+                            deeplink: document.getElementById('layout3-card1-deeplink').value
+                        },
+                        {
+                            icon: document.getElementById('layout3-card2-icon').value,
+                            text: document.getElementById('layout3-card2-text').value,
+                            deeplink: document.getElementById('layout3-card2-deeplink').value
+                        },
+                        {
+                            icon: document.getElementById('layout3-card3-icon').value,
+                            text: document.getElementById('layout3-card3-text').value,
+                            deeplink: document.getElementById('layout3-card3-deeplink').value
+                        }
+                    ];
+                case 4:
+                    return [
+                        {
+                            icon: document.getElementById('layout4-card1-icon').value,
+                            text: document.getElementById('layout4-card1-text').value,
+                            deeplink: document.getElementById('layout4-card1-deeplink').value
+                        },
+                        {
+                            icon: document.getElementById('layout4-card2-icon').value,
+                            text: document.getElementById('layout4-card2-text').value,
+                            deeplink: document.getElementById('layout4-card2-deeplink').value
+                        },
+                        {
+                            icon: document.getElementById('layout4-card3-icon').value,
+                            text: document.getElementById('layout4-card3-text').value,
+                            deeplink: document.getElementById('layout4-card3-deeplink').value
+                        }
+                    ];
+                default:
+                    return {};
+            }
+        }
+
+        /**
+         * Preenche campos com dados existentes
+         */
+        function populateFields(layoutId, data) {
+            if (!data) return;
+            
+            switch (layoutId) {
+                case 1:
+                    if (data.title !== undefined) {
+                        document.getElementById('layout1-title').value = data.title;
+                    }
+                    if (data.bullets && Array.isArray(data.bullets)) {
+                        data.bullets.forEach((bullet, index) => {
+                            const iconField = document.getElementById(`layout1-bullet${index + 1}-icon`);
+                            const textField = document.getElementById(`layout1-bullet${index + 1}-text`);
+                            if (iconField) iconField.value = bullet.icon || '';
+                            if (textField) textField.value = bullet.text || '';
+                        });
+                    }
+                    if (data.description !== undefined) {
+                        document.getElementById('layout1-description').value = data.description;
+                    }
+                    break;
+                    
+                case 2:
+                    if (data.card1) {
+                        document.getElementById('layout2-card1-bg').value = data.card1.background || '';
+                        document.getElementById('layout2-card1-text').value = data.card1.text || '';
+                        document.getElementById('layout2-card1-deeplink').value = data.card1.deeplink || '';
+                    }
+                    if (data.card2) {
+                        document.getElementById('layout2-card2-icon').value = data.card2.icon || '';
+                        document.getElementById('layout2-card2-text').value = data.card2.text || '';
+                    }
+                    break;
+                    
+                case 3:
+                    if (Array.isArray(data)) {
+                        data.forEach((card, index) => {
+                            const iconField = document.getElementById(`layout3-card${index + 1}-icon`);
+                            const textField = document.getElementById(`layout3-card${index + 1}-text`);
+                            const deeplinkField = document.getElementById(`layout3-card${index + 1}-deeplink`);
+                            if (iconField) iconField.value = card.icon || '';
+                            if (textField) textField.value = card.text || '';
+                            if (deeplinkField) deeplinkField.value = card.deeplink || '';
+                        });
+                    }
+                    break;
+                    
+                case 4:
+                    if (Array.isArray(data)) {
+                        data.forEach((card, index) => {
+                            const iconField = document.getElementById(`layout4-card${index + 1}-icon`);
+                            const textField = document.getElementById(`layout4-card${index + 1}-text`);
+                            const deeplinkField = document.getElementById(`layout4-card${index + 1}-deeplink`);
+                            if (iconField) iconField.value = card.icon || '';
+                            if (textField) textField.value = card.text || '';
+                            if (deeplinkField) deeplinkField.value = card.deeplink || '';
+                        });
+                    }
+                    break;
+            }
+        }
+
+        /**
+         * Salva dados no Contentstack ou localStorage
+         */
+        function saveData() {
+            try {
+                if (extension && extension.field && extension.field.setData) {
+                    // Salvar no Contentstack
+                    extension.field.setData(allCategoriesData);
+                } else {
+                    // Fallback para localStorage
+                    localStorage.setItem('contentstack-extension-categories-data', JSON.stringify(allCategoriesData));
+                }
+            } catch (error) {
+                console.error('Erro ao salvar dados:', error);
+            }
+        }
+
+        // Inicializar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', initExtension);
+    </script>
+</body>
+</html>
