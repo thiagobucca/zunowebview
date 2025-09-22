@@ -1,0 +1,3726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Extension Field - Contentstack com Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .left-panel {
+            flex: 1;
+            background: white;
+            padding: 24px;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        /* Custom scrollbar for left panel */
+        .left-panel {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+        }
+
+        .left-panel::-webkit-scrollbar {
+            width: 2px;
+        }
+
+        .left-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+        }
+
+        .left-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            background: #f8f9fa;
+            background-image: radial-gradient(circle, #d0d0d0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 24px;
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin: 24px 0 16px 0;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .categories-section {
+            margin: 24px 0;
+        }
+
+        .categories-accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .category-accordion {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .category-accordion.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            background: #f8f9fa;
+            border-bottom: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .category-header:hover {
+            background: #e9ecef;
+        }
+
+        .category-accordion.expanded .category-header {
+            border-bottom-color: #ddd;
+        }
+
+        .category-drag-handle {
+            margin-right: 8px;
+            color: #999;
+            cursor: grab;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .category-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .category-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin: 0 12px 0 0;
+        }
+
+        .category-name {
+            font-weight: 500;
+            color: #333;
+            flex: 1;
+        }
+
+        .category-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .accordion-arrow {
+            font-size: 12px;
+            color: #666;
+            transition: transform 0.2s ease;
+        }
+
+        .category-accordion.expanded .accordion-arrow {
+            transform: rotate(90deg);
+        }
+
+        .category-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .category-accordion.expanded .category-content {
+            max-height: 2000px;
+            padding: 16px;
+        }
+
+        .layout-selector {
+            margin-bottom: 20px;
+        }
+
+        .layout-selector h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .layout-option {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            background: white;
+        }
+
+        .layout-option:hover {
+            border-color: #007bff;
+            transform: translateY(-1px);
+            box-shadow: 0 1px 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .layout-option.selected {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .layout-option span {
+            display: block;
+            margin-top: 4px;
+            font-size: 9px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .layout-visual {
+            width: 30px;
+            height: 22px;
+            margin: 0 auto 2px auto;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .layout-1 .layout-visual {
+            background: linear-gradient(to bottom, #ff69b4 0%, #ff69b4 100%);
+            border-radius: 6px;
+            width: 58px;
+            height: 82px;
+        }
+
+
+
+        .layout-2 .layout-visual {
+            background: transparent;
+            border-radius: 6px;
+            width: 58px;
+            height: 82px;
+            position: relative;
+        }
+
+        .layout-2 .layout-visual::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 68%;
+            background: #ff69b4;
+            border-radius: 4px 4px 4px 4px;
+        }
+
+        .layout-2 .layout-visual::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 28%;
+            background: #ff69b4;
+            border-radius: 4px 4px 3px 3px;
+        }
+
+
+
+        .layout-3 .layout-visual {
+            background: transparent;
+            border-radius: 6px;
+            width: 58px;
+            height: 82px;
+            position: relative;
+        }
+
+        .layout-3 .layout-visual::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 37%;
+            background: #ff69b4;
+            border-radius: 4px 4px 6px 6px;
+        }
+
+        .layout-3 .layout-visual::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 26px;
+            height: 59%;
+            background: #ff69b4;
+            border-radius: 4px 4px 4px 4px;
+            box-shadow: 30px 0 0 0 #ff69b4;
+        }
+
+        .layout-4 .layout-visual {
+            background: transparent;
+            width: 58px;
+            height: 82px;
+            position: relative;
+            margin-top: 2px;
+        }
+
+        .layout-4 .layout-visual::before {
+            content: '';
+            position: absolute;
+            top: 0px;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #ff69b4;
+            border-radius: 3px;
+        }
+
+        .layout-4 .layout-visual::after {
+            content: '';
+            position: absolute;
+            top: 28px;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #ff69b4;
+            border-radius: 3px;
+            box-shadow: 0 28px 0 0 #ff69b4;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.configured {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.empty {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .configure-button {
+            padding: 6px 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .configure-button:hover {
+            background: #0056b3;
+        }
+
+        .active-config {
+            margin-top: 24px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .active-config.hidden {
+            display: none;
+        }
+
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .config-header h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .cancel-button {
+            padding: 6px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .cancel-button:hover {
+            background: #c82333;
+        }
+
+        .layouts-section {
+            margin-bottom: 24px;
+        }
+
+        .layouts-title {
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .layouts-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .layout-option {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .layout-option:hover {
+            border-color: #007bff;
+        }
+
+        .layout-option.selected {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+
+        .layout-visual {
+            width: 100%;
+            height: 90px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .layout-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .fields-section {
+            margin-top: 20px;
+        }
+
+        .fields-section.hidden {
+            display: none;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            background: white;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .card-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .field-input {
+            font-size: 13px;
+        }
+
+        /* Clean Minimalist Toggle */
+        .toggle-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 8px;
+        }
+
+        .toggle-input {
+            display: none;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            gap: 10px;
+        }
+
+        .toggle-inner {
+            position: relative;
+            width: 44px;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-inner::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-input:checked+.toggle-label .toggle-inner {
+            background: #000066;
+        }
+
+        .toggle-input:checked+.toggle-label .toggle-inner::before {
+            transform: translateX(24px);
+        }
+
+        .toggle-switch-text {
+            font-size: 12px;
+            color: #374151;
+            font-weight: 400;
+            letter-spacing: 0.025em;
+        }
+
+        .field-group:has(.toggle-switch) {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        /* Phone Preview Styles */
+        .phone-container {
+            width: 400px;
+            height: 800px;
+            background: #000;
+            border-radius: 30px;
+            padding: 10px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #f5f5f5;
+            border-radius: 22px;
+            overflow-x: visible; /* Permite scroll horizontal dos chips */
+            overflow-y: hidden; /* Mantém controle vertical */
+            position: relative;
+        }
+
+        .phone-header {
+            height: 44px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .phone-status-icons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .phone-close {
+            position: absolute;
+            top: 60px;
+            right: 30px;
+            width: 24px;
+            height: 24px;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #444;
+            font-weight: 600;
+            z-index: 20;
+        }
+
+        .phone-avatar {
+            position: absolute;
+            top: 110px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            transition: opacity 0.3s ease;
+        }
+
+        .phone-avatar.hidden-on-scroll {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .phone-content {
+            height: calc(100% - 44px);
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom scrollbar for phone preview */
+        .phone-content {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.08) transparent;
+        }
+
+        .phone-content::-webkit-scrollbar {
+            width: 1px;
+        }
+
+        .phone-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .phone-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.08);
+            border-radius: 2px;
+        }
+
+        .phone-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .phone-initial-content {
+            padding: 130px 0 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .phone-sticky-header {
+            position: sticky;
+            top: -200px;
+            background: #f5f5f5;
+            z-index: 10;
+            padding: 0px 0px 0px 0px;
+            border-bottom: none;
+            transition: top 0.3s ease, padding 0.3s ease, border-bottom 0.3s ease;
+        }
+
+        .phone-sticky-header.scrolled {
+            top: 0;
+            padding: 2px 0px 14px 0px;
+            padding-top: 62px;
+            margin-top: -64px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .phone-background-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.3;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .phone-background-overlay.hidden-on-scroll {
+            opacity: 0;
+        }
+
+        .phone-scrollable-content {
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 200px);
+        }
+
+        .phone-text {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            margin: 0 20px 8px 20px;
+            font-size: 16px;
+            color: #000000;
+            line-height: 1.4;
+            font-weight: 700;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .phone-text.hidden-on-scroll {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .phone-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            margin: 0 20px 0 20px;
+            padding-right: 20px;
+            margin-right: 0;
+            /* Firefox */
+        }
+
+        .phone-chips::-webkit-scrollbar {
+            height: 1px;
+            /* Chrome, Safari and Opera */
+        }
+
+        .phone-chips::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 1px;
+        }
+
+        .phone-chips::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 1px;
+        }
+
+        .phone-chips::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .phone-chips-in-content {
+            margin-bottom: 20px;
+        }
+
+        .phone-chip {
+            padding: 12px 16px;
+            background: #fff;
+            border: 0px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #000;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+        }
+
+        .phone-chip.active {
+            background: #fff;
+            color: #000;
+            border: 1px solid #ff6b35;
+        }
+
+        .phone-chip.selected {
+            background: #fff;
+            color: #000;
+            border: 2px solid #ff6b35;
+            border-radius: 12px;
+        }
+
+        .phone-chip.edit {
+            background: #ff6b35;
+            color: #fff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .phone-offers {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .preview-message {
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            border: 1px dashed #d1cece;
+        }
+
+        .preview-message-icon {
+            width: 40px;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .preview-message-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .preview-message-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Layout 2 Preview Styles */
+        .layout2-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .layout2-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1px;
+            text-align: left;
+        }
+
+        .layout2-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .layout2-card1 {
+            position: relative;
+            height: 360px;
+            border-radius: 12px;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px 16px 4px 16px;
+            color: white;
+        }
+
+
+        .layout2-card1::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzEycHgiIGhlaWdodD0iMzYwcHgiIHZpZXdCb3g9IjAgMCAzMTIgMzYwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iUmV0w6JuZ3VsbyBsYXJhbmphICNmZjY2MDAiPgogIDxyZWN0IHdpZHRoPSIzMTIiIGhlaWdodD0iMzYwIiBmaWxsPSIjZmY2NjAwIiAvPgo8L3N2Zz4=');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+
+        .layout2-card1-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+
+        .layout2-card1-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .layout2-card1-title {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .layout2-card1-description {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .layout2-card1-arrow {
+            font-size: 24px;
+            margin-left: 12px;
+            opacity: 0.9;
+        }
+
+        .layout2-card2 {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            height: 144px;
+        }
+
+        .layout2-card2-icon {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            font-size: 24px;
+        }
+
+        .layout2-card2-content {
+            margin-top: 56px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .layout2-card2-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .layout2-card2-title {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.3;
+            margin-bottom: 0;
+        }
+
+        .layout2-card2-description {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+
+        /* Layout 1 Preview Styles */
+        .layout1-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .layout1-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1px;
+            text-align: left;
+        }
+
+        .layout1-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            height: 466px;
+        }
+
+        .layout1-card-icon {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .layout1-card-content {
+            margin-top: 68px;
+            text-align: left;
+            padding-right: 40px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 78px);
+        }
+
+        .layout1-card-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .layout1-card-description {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .layout1-bullets {
+            margin-bottom: auto;
+            flex: 1;
+        }
+
+        .layout1-bullet {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .layout1-bullet-icon {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .layout1-bullet-text {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.4;
+            margin-top: 2px;
+        }
+
+        .layout1-cta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-top: auto;
+            padding-top: 20px;
+            white-space: nowrap;
+        }
+
+        .layout1-cta-text {
+            flex-shrink: 0;
+        }
+
+        /* Layout 4 Preview Styles */
+        .layout4-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 472px;
+        }
+
+        .layout4-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1px;
+            text-align: left;
+        }
+
+        .layout4-card1 {
+            background: #000066;
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            position: relative;
+            height: 149px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .layout4-card1.white-bg {
+            background: white;
+            color: #333;
+        }
+
+        .layout4-card1-icon {
+            position: absolute;
+            top: 32px;
+            left: 16px;
+            font-size: 24px;
+        }
+
+        .layout4-card1-content {
+            margin-top: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .layout4-card1-text {
+            display: block;
+        }
+
+        .layout4-card1-footer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .layout4-card1-arrow {
+            font-size: 20px;
+            color: white;
+        }
+
+        .layout4-card1-title {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.3;
+        }
+
+        .layout4-card1-description {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .layout4-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            height: 149px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .layout4-card-icon {
+            position: absolute;
+            top: 32px;
+            left: 16px;
+            font-size: 24px;
+        }
+
+        .layout4-card-content {
+            margin-top: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .layout4-card-text {
+            flex: 1;
+        }
+
+        .layout4-card-title {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .layout4-card-description {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .layout4-card-footer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .layout4-card-arrow {
+            font-size: 20px;
+            color: #666;
+        }
+
+        /* Footer Styles */
+        .phone-footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .phone-content.has-categories .phone-footer {
+            margin-top: -10px;
+        }
+
+        /* When no categories, footer should be at bottom */
+        .phone-content:not(.has-categories) {
+            overflow-y: hidden;
+        }
+
+        .phone-content:not(.has-categories) .phone-scrollable-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .phone-content:not(.has-categories) .phone-offers {
+            flex: 1;
+        }
+
+        .phone-content:not(.has-categories) .phone-footer {
+            margin-top: auto !important;
+            flex-shrink: 0;
+            min-height: 120px;
+            position: relative;
+        }
+
+        /* Hide title of first category */
+        [data-category-section]:first-of-type .layout1-title,
+        [data-category-section]:first-of-type .layout2-title,
+        [data-category-section]:first-of-type .layout3-title,
+        [data-category-section]:first-of-type .layout4-title {
+            display: none;
+        }
+
+        .footer-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .footer-card {
+            background: #FF6200;
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            height: 152px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .footer-card-content {
+            flex: 1;
+            margin-right: 40px;
+            min-width: 0;
+        }
+
+        .footer-card-title {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.3;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+
+
+        .footer-card-arrow {
+            font-size: 20px;
+            color: white;
+            margin-left: 12px;
+        }
+
+        .footer-card-icon {
+            position: absolute;
+            top: 20px;
+            left: 16px;
+            font-size: 20px;
+        }
+
+        /* Layout 3 Preview Styles */
+        .layout3-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .layout3-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 1px;
+            text-align: left;
+        }
+
+        .layout3-card1 {
+            background: #FF6200;
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            position: relative;
+            height: 152px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .layout3-card1-icon {
+            position: absolute;
+            top: 20px;
+            left: 12px;
+            font-size: 20px;
+        }
+
+        .layout3-card1-content {
+            margin-left: 0px;
+            margin-bottom: 0px;
+            align-self: flex-start;
+        }
+
+        .layout3-card1-title {
+            font-size: 13px;
+            opacity: 0.9;
+            line-height: 1.3;
+        }
+
+        .layout3-card1-description {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .layout3-cards-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .layout3-card {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            height: 312px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .layout3-card-icon {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            z-index: 10;
+        }
+
+        .layout3-card-content {
+            align-self: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .layout3-card-title {
+            font-size: 10px;
+            font-weight: 600;
+            color: #4C4C4C;
+            margin-bottom: 4px;
+        }
+
+        .layout3-card-description span {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+            flex: 1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .layout3-card2,
+        .layout3-card3 {
+            width: calc(50% - 4px);
+            flex: none;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            height: 312px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
+        }
+
+        .layout3-card2-icon {
+            position: absolute;
+            top: 24px;
+            left: 12px;
+            font-size: 24px;
+        }
+
+        .layout3-card3-icon {
+            position: absolute;
+            top: 24px;
+            left: 12px;
+            font-size: 24px;
+            z-index: 10;
+        }
+
+
+        .layout3-card2-title,
+        .layout3-card3-title {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .layout3-card2-description span,
+        .layout3-card3-description span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4C4C4C;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+
+        .layout3-card2-content,
+        .layout3-card3-content,
+        .layout3-card-content {
+            display: flex;
+            flex-direction: column;
+            align-self: flex-start;
+            margin-bottom: 18px;
+            max-width: 100%;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .layout3-card2-description,
+        .layout3-card3-description,
+        .layout3-card-description {
+            position: relative;
+            width: 100%;
+            min-width: 0;
+            padding-right: 24px;
+        }
+
+        .layout3-card2-chevron,
+        .layout3-card3-chevron,
+        .layout3-card-chevron {
+            position: absolute;
+            bottom: -2px;
+            right: 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Painel Esquerdo - Configuração -->
+        <div class="left-panel">
+            <h2><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4C4C4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-top-icon lucide-panel-top">
+                    <rect width="18" height="18" x="3" y="3" rx="2"/>
+                    <path d="M3 9h18"/>
+                </svg> Header</h2>
+
+            <!-- Campos globais -->
+            <div class="field-group">
+                <label for="background-image">Imagem de Fundo (URL):</label>
+                <input type="text" id="background-image" placeholder="https://exemplo.com/imagem.jpg">
+            </div>
+
+            <div class="field-group">
+                <label for="main-text">Texto Principal:</label>
+                <textarea id="main-text"
+                    placeholder="João, com base no seu perfil, preparamos estas ofertas especiais para você!"></textarea>
+            </div>
+
+            <h2><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="#4C4C4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-gallery-vertical-end-icon lucide-gallery-vertical-end">
+                    <path d="M7 2h10" />
+                    <path d="M5 6h14" />
+                    <rect width="18" height="12" x="3" y="10" rx="2" />
+                </svg> Interesses</h2>
+            <p style="font-size: 12px; color: #666; margin-bottom: 16px;">✓ Marque os interesses, defina o layout e adicione os produtos desejados ⋮⋮
+                Arraste para reordenar e definir o peso</p>
+
+            <div class="categories-accordion" id="categories-accordion">
+                <!-- Categories will be dynamically generated here -->
+            </div>
+
+            <!-- Seção de configuração ativa -->
+            <div id="active-config" class="active-config hidden">
+                <div class="config-header">
+                    <h3 id="config-title">Configurando: --</h3>
+                    <button class="cancel-button" onclick="cancelConfiguration()">✕ Cancelar</button>
+                </div>
+
+                <!-- Seleção de layout -->
+                <div class="layouts-section">
+                    <h4 class="layouts-title">Escolha o Layout:</h4>
+                    <div class="layouts-grid">
+                        <div class="layout-option layout-1" onclick="selectLayout(1)">
+                            <div class="layout-visual"></div>
+                            <span class="layout-name">Layout 1</span>
+                        </div>
+                        <div class="layout-option layout-2" onclick="selectLayout(2)">
+                            <div class="layout-visual"></div>
+                            <span class="layout-name">Layout 2</span>
+                        </div>
+                        <div class="layout-option layout-3" onclick="selectLayout(3)">
+                            <div class="layout-visual"></div>
+                            <span class="layout-name">Layout 3</span>
+                        </div>
+                        <div class="layout-option layout-4" onclick="selectLayout(4)">
+                            <div class="layout-visual"></div>
+                            <span class="layout-name">Layout 4</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campos do Layout 2 -->
+                <div id="fields-layout-2" class="fields-section hidden">
+                    <div class="cards-container">
+                        <div class="card-item">
+                            <div class="card-title">Card 1 (Com Imagem de Fundo)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout2-card1-bg">Imagem de Background:</label>
+                                    <input type="text" id="layout2-card1-bg" class="field-input"
+                                        placeholder="URL da imagem">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout2-card1-title">Título da Oferta:</label>
+                                    <input type="text" id="layout2-card1-title" class="field-input"
+                                        placeholder="Cofrinhos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout2-card1-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout2-card1-description" class="field-input"
+                                        placeholder="Organize suas economias e realize seus planos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout2-card1-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout2-card1-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-item">
+                            <div class="card-title">Card 2 (Fundo Branco)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout2-card2-icon">Ícone:</label>
+                                    <input type="text" id="layout2-card2-icon" class="field-input"
+                                        placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-no-axes-column-increasing-icon lucide-chart-no-axes-column-increasing"><path d="M5 21v-6"/><path d="M12 21V9"/><path d="M19 21V3"/></svg>'>
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout2-card2-title">Título da Oferta:</label>
+                                    <input type="text" id="layout2-card2-title" class="field-input"
+                                        placeholder="Investimentos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout2-card2-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout2-card2-description" class="field-input"
+                                        placeholder="Encontre sua aplicação">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout2-card2-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout2-card2-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campos do Layout 1 -->
+                <div id="fields-layout-1" class="fields-section hidden">
+
+                    <div class="cards-container">
+                        <div class="card-item">
+                            <div class="card-title">Card Principal</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout1-icon">Ícone:</label>
+                                    <input type="text" id="layout1-icon" class="field-input" placeholder="🛡️">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout1-title">Título da Oferta:</label>
+                                    <input type="text" id="layout1-title" class="field-input"
+                                        placeholder="Seguro Transações">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout1-description">Descrição da Oferta:</label>
+                                    <textarea id="layout1-description" class="field-input"
+                                        placeholder="Proteção extra contra imprevistos para sua conta e cartão"></textarea>
+                                </div>
+
+                                <div class="bullets-section">
+                                    <div class="bullets-title">Bullets (até 3):</div>
+
+                                    <div class="bullet-item">
+                                        <div class="bullet-title">Bullet 1:</div>
+                                        <div class="bullet-fields">
+                                            <div class="field-group">
+                                                <label for="layout1-bullet1-icon">Ícone:</label>
+                                                <input type="text" id="layout1-bullet1-icon" class="field-input"
+                                                    placeholder="✓">
+                                            </div>
+                                            <div class="field-group">
+                                                <label for="layout1-bullet1-text">Texto:</label>
+                                                <input type="text" id="layout1-bullet1-text" class="field-input"
+                                                    placeholder="Roubo de itens pessoais até R$ 1,5 mil">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bullet-item">
+                                        <div class="bullet-title">Bullet 2:</div>
+                                        <div class="bullet-fields">
+                                            <div class="field-group">
+                                                <label for="layout1-bullet2-icon">Ícone:</label>
+                                                <input type="text" id="layout1-bullet2-icon" class="field-input"
+                                                    placeholder="✓">
+                                            </div>
+                                            <div class="field-group">
+                                                <label for="layout1-bullet2-text">Texto:</label>
+                                                <input type="text" id="layout1-bullet2-text" class="field-input"
+                                                    placeholder="Furto e roubo após saque até R$ 1 mil">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bullet-item">
+                                        <div class="bullet-title">Bullet 3:</div>
+                                        <div class="bullet-fields">
+                                            <div class="field-group">
+                                                <label for="layout1-bullet3-icon">Ícone:</label>
+                                                <input type="text" id="layout1-bullet3-icon" class="field-input"
+                                                    placeholder="✓">
+                                            </div>
+                                            <div class="field-group">
+                                                <label for="layout1-bullet3-text">Texto:</label>
+                                                <input type="text" id="layout1-bullet3-text" class="field-input"
+                                                    placeholder="Uso forçado de conta e cartão até R$ 10 mil">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field-group">
+                                    <label for="layout1-cta">Call to Action:</label>
+                                    <input type="text" id="layout1-cta" class="field-input"
+                                        placeholder="Contratar seguro">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout1-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout1-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campos do Layout 4 -->
+                <div id="fields-layout-4" class="fields-section hidden">
+
+                    <div class="cards-container">
+                        <div class="card-item">
+                            <div class="card-title">Card 1 (Azul Marinho - Principal)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout4-card1-icon">Ícone:</label>
+                                    <input type="text" id="layout4-card1-icon" class="field-input"
+                                        placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'>
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card1-title">Título da Oferta:</label>
+                                    <input type="text" id="layout4-card1-title" class="field-input"
+                                        placeholder="Previdência">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card1-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout4-card1-description" class="field-input"
+                                        placeholder="Um futuro mais tranquilo">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card1-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout4-card1-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card1-blue-bg">Usar cor do segmento:</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" id="layout4-card1-blue-bg" class="toggle-input" checked>
+                                        <label for="layout4-card1-blue-bg" class="toggle-label">
+                                            <span class="toggle-inner"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-item">
+                            <div class="card-title">Card 2 (Branco)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout4-card2-icon">Ícone:</label>
+                                    <input type="text" id="layout4-card2-icon" class="field-input"
+                                        placeholder="<svg xmlns=" http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-target-icon lucide-target">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <circle cx="12" cy="12" r="6" />
+                                    <circle cx="12" cy="12" r="2" /></svg>">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card2-title">Título da Oferta:</label>
+                                    <input type="text" id="layout4-card2-title" class="field-input"
+                                        placeholder="Investimentos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card2-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout4-card2-description" class="field-input"
+                                        placeholder="Um futuro mais tranquilo">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card2-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout4-card2-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-item">
+                            <div class="card-title">Card 3 (Branco)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout4-card3-icon">Ícone:</label>
+                                    <input type="text" id="layout4-card3-icon" class="field-input"
+                                        placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'>
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card3-title">Título da Oferta:</label>
+                                    <input type="text" id="layout4-card3-title" class="field-input"
+                                        placeholder="Cofrinhos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card3-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout4-card3-description" class="field-input"
+                                        placeholder="Organize suas economias e realize seus planos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout4-card3-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout4-card3-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campos do Layout 3 -->
+                <div id="fields-layout-3" class="fields-section hidden">
+
+                    <div class="cards-container">
+                        <div class="card-item">
+                            <div class="card-title">Card 1 (Laranja - Principal)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout3-card1-icon">Ícone:</label>
+                                    <input type="text" id="layout3-card1-icon" class="field-input"
+                                        placeholder="<svg xmlns=" http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-target-icon lucide-target">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <circle cx="12" cy="12" r="6" />
+                                    <circle cx="12" cy="12" r="2" /></svg>">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card1-title">Título da Oferta:</label>
+                                    <input type="text" id="layout3-card1-title" class="field-input"
+                                        placeholder="Previdência">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card1-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout3-card1-description" class="field-input"
+                                        placeholder="Garanta um futuro tranquilo">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card1-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout3-card1-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-item">
+                            <div class="card-title">Card 2 (Branco - Esquerdo)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout3-card2-icon">Ícone:</label>
+                                    <input type="text" id="layout3-card2-icon" class="field-input"
+                                        placeholder="<svg xmlns=" http://www.w3.org/2000/svg" width="24" height="24"
+                                        viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round"
+                                        class="lucide lucide-target-icon lucide-target">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <circle cx="12" cy="12" r="6" />
+                                    <circle cx="12" cy="12" r="2" /></svg>">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card2-title">Título da Oferta:</label>
+                                    <input type="text" id="layout3-card2-title" class="field-input"
+                                        placeholder="Assessoria de investimentos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card2-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout3-card2-description" class="field-input"
+                                        placeholder="Otimize o seurendimento">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card2-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout3-card2-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-item">
+                            <div class="card-title">Card 3 (Branco - Direito)</div>
+                            <div class="card-fields">
+                                <div class="field-group">
+                                    <label for="layout3-card3-icon">Ícone:</label>
+                                    <input type="text" id="layout3-card3-icon" class="field-input"
+                                        placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'>
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card3-title">Título da Oferta:</label>
+                                    <input type="text" id="layout3-card3-title" class="field-input"
+                                        placeholder="Portabilidade de Investimentos">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card3-description">Descrição da Oferta:</label>
+                                    <input type="text" id="layout3-card3-description" class="field-input"
+                                        placeholder="Controle seus rendimentos no mesmo app">
+                                </div>
+                                <div class="field-group">
+                                    <label for="layout3-card3-deeplink">Deeplink:</label>
+                                    <input type="text" id="layout3-card3-deeplink" class="field-input"
+                                        placeholder="URL do deeplink">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção Footer -->
+            <div class="section">
+                <h2><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="#4C4C4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                        class="lucide lucide-rectangle-ellipsis-icon lucide-rectangle-ellipsis">
+                        <rect width="20" height="12" x="2" y="6" rx="2" />
+                        <path d="M12 12h.01" />
+                        <path d="M17 12h.01" />
+                        <path d="M7 12h.01" />
+                    </svg> Footer</h2>
+                <div class="field-group">
+                    <label for="footer-title">Título do Footer:</label>
+                    <input type="text" id="footer-title" class="field-input" placeholder="Título do footer"
+                        oninput="updateFooterPreview()">
+                </div>
+
+                <div class="card-item">
+                    <div class="card-title">Card Footer (Laranja)</div>
+                    <div class="card-fields">
+                        <div class="field-group">
+                            <label for="footer-card-title">Descrição do footer:</label>
+                            <input type="text" id="footer-card-title" class="field-input" placeholder="Título da oferta"
+                                oninput="updateFooterPreview()">
+                        </div>
+                        <div class="field-group">
+                            <label for="footer-card-deeplink">Deeplink:</label>
+                            <input type="text" id="footer-card-deeplink" class="field-input"
+                                placeholder="URL do deeplink" oninput="updateFooterPreview()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel Direito - Preview -->
+        <div class="right-panel">
+            <div class="phone-container">
+                <div class="phone-screen">
+                    <div class="phone-header">
+                        <span id="phone-time">20:05</span>
+                        <div class="phone-status-icons">
+                            <!-- WiFi Icon -->
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M1 9l11 11 11-11C19.62 5.62 16.13 3 12 3S4.38 5.62 1 9z" fill="#000" opacity="0.8"/>
+                                <path d="M5 13l7 7 7-7C17.38 10.38 14.88 8.5 12 8.5S6.62 10.38 5 13z" fill="#000" opacity="0.6"/>
+                                <path d="M9 17l3 3 3-3C14.24 15.24 13.12 14.5 12 14.5S9.76 15.24 9 17z" fill="#000"/>
+                            </svg>
+                            <!-- Battery Icon -->
+                            <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
+                                <rect x="1" y="2" width="18" height="8" rx="1.5" stroke="#000" stroke-width="1" fill="none"/>
+                                <rect x="2.5" y="3.5" width="13" height="5" rx="0.5" fill="#000"/>
+                                <rect x="19.5" y="4.5" width="2" height="3" rx="0.5" fill="#000"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="phone-close">✕</div>
+                    <div class="phone-avatar"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"
+                            viewBox="0 0 24 24" fill="none" stroke="#000066" stroke-width="1" stroke-linecap="round"
+                            stroke-linejoin="round" class="lucide lucide-heart-icon lucide-heart">
+                            <path
+                                d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+                        </svg></div>
+
+                    <div class="phone-content" id="phone-content">
+                        <div class="phone-background-overlay" id="phone-background-overlay"></div>
+
+                        <div class="phone-initial-content">
+                            <div class="phone-text" id="phone-text">
+                                João, com base no seu perfil, preparamos estas ofertas especiais para você!
+                            </div>
+                        </div>
+
+                        <div class="phone-sticky-header">
+                            <div class="phone-chips" id="phone-chips-header">
+                                <div class="phone-chip">Interesse 1</div>
+                                <div class="phone-chip">Interesse 2</div>
+                            </div>
+                        </div>
+
+                        <div class="phone-scrollable-content">
+                            <div class="phone-offers" id="phone-offers">
+                                <div class="preview-message">Configure uma categoria para ver o preview aqui</div>
+                            </div>
+
+                            <div class="phone-footer" id="phone-footer">
+                                <div class="footer-title" id="footer-title-preview">Título do Footer</div>
+                                <div class="footer-card" id="footer-card-preview">
+                                    <div class="footer-card-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                            height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-pencil-icon lucide-pencil">
+                                            <path
+                                                d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+                                            <path d="m15 5 4 4" />
+                                        </svg></div>
+                                    <div class="footer-card-content">
+                                        <div class="footer-card-title">Descrição do Footer</div>
+                                    </div>
+                                    <div class="footer-card-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="16"
+                                            height="16" viewBox="0 0 24 24" fill="none" stroke="#feffff"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                            class="lucide lucide-chevron-right-icon lucide-chevron-right">
+                                            <path d="m9 18 6-6-6-6" />
+                                        </svg></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCategory = null;
+        let currentLayout = null;
+        let categoriesData = {};
+
+        // Categories definition with UUID, name and SVG icon
+        const categoriesDefinition = {
+            'credito': {
+                uuid: 'cat-001-credito',
+                name: 'Crédito',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+            },
+            'debito': {
+                uuid: 'cat-002-debito',
+                name: 'Débito',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+            },
+            'beneficios': {
+                uuid: 'cat-003-beneficios',
+                name: 'Benefícios',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+            },
+            'protecao': {
+                uuid: 'cat-004-protecao',
+                name: 'Proteção',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+            },
+            'organizacaofinanceira': {
+                uuid: 'cat-005-organizacaofinanceira',
+                name: 'Organização Financeira',
+                icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+            }
+        };
+
+        // Function to generate accordion HTML dynamically
+        function generateCategoryAccordions() {
+            const accordionContainer = document.getElementById('categories-accordion');
+            accordionContainer.innerHTML = '';
+
+            Object.keys(categoriesDefinition).forEach(categoryKey => {
+                const category = categoriesDefinition[categoryKey];
+
+                const accordionHTML = `
+                    <div class="category-accordion" data-category="${categoryKey}">
+                        <div class="category-header">
+                            <div class="category-drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="cat-${categoryKey}" class="category-checkbox">
+                            <span class="category-name">${category.name}</span>
+                            <div class="category-status">
+                                <span id="status-${categoryKey}" class="status-badge empty">Vazio</span>
+                                <span class="accordion-arrow">▶</span>
+                            </div>
+                        </div>
+                        <div class="category-content">
+                            <!-- Layout selection and configuration will go here -->
+                            <div class="layout-selector">
+                                <h4>Escolha o Layout:</h4>
+                                <div class="layout-grid">
+                                    <div class="layout-option" data-layout="1">
+                                        <div class="layout-visual">
+                                            <div class="layout-1">
+                                                <div class="layout-visual"></div>
+                                            </div>
+                                        </div>
+                                        <span>Layout 1</span>
+                                    </div>
+                                    <div class="layout-option" data-layout="2">
+                                        <div class="layout-visual">
+                                            <div class="layout-2">
+                                                <div class="layout-visual"></div>
+                                            </div>
+                                        </div>
+                                        <span>Layout 2</span>
+                                    </div>
+                                    <div class="layout-option" data-layout="3">
+                                        <div class="layout-visual">
+                                            <div class="layout-3">
+                                                <div class="layout-visual"></div>
+                                            </div>
+                                        </div>
+                                        <span>Layout 3</span>
+                                    </div>
+                                    <div class="layout-option" data-layout="4">
+                                        <div class="layout-visual">
+                                            <div class="layout-4">
+                                                <div class="layout-visual"></div>
+                                            </div>
+                                        </div>
+                                        <span>Layout 4</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="category-fields" id="fields-${categoryKey}">
+                                <!-- Fields will be inserted here based on selected layout -->
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                accordionContainer.insertAdjacentHTML('beforeend', accordionHTML);
+            });
+        }
+
+        function updatePhoneTime() {
+            const now = new Date();
+            // Converter para fuso horário do Brasil (GMT-3 / America/Sao_Paulo)
+            const brazilTime = now.toLocaleTimeString('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            const phoneTimeElement = document.getElementById('phone-time');
+            if (phoneTimeElement) {
+                phoneTimeElement.textContent = brazilTime;
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function () {
+            generateCategoryAccordions();
+            setupEventListeners();
+            setupScrollBehavior();
+            updatePreview();
+            updatePhoneTime();
+        });
+
+        function setupEventListeners() {
+            // Listeners para campos globais
+            document.getElementById('background-image').addEventListener('input', updatePreview);
+            document.getElementById('main-text').addEventListener('input', updatePreview);
+
+            // Listeners para checkboxes das categorias
+            Object.keys(categoriesDefinition).forEach(category => {
+                const checkbox = document.getElementById(`cat-${category}`);
+                if (checkbox) {
+                    checkbox.addEventListener('change', updatePreview);
+                }
+            });
+
+            // Listener para layout 4 card 1 background toggle
+            const blueBgToggle = document.getElementById('layout4-card1-blue-bg');
+            if (blueBgToggle) {
+                blueBgToggle.addEventListener('change', updatePreview);
+            }
+
+
+
+
+
+            // Setup accordion functionality
+            setupAccordions();
+            setupDragAndDrop();
+        }
+
+        function setupAccordions() {
+            // Setup accordion headers click
+            document.querySelectorAll('.category-header').forEach(header => {
+                header.addEventListener('click', function (e) {
+                    // Don't trigger accordion if clicking on checkbox or drag handle
+                    if (e.target.closest('.category-checkbox') || e.target.closest('.category-drag-handle')) {
+                        return;
+                    }
+
+                    const accordion = this.closest('.category-accordion');
+                    const isExpanded = accordion.classList.contains('expanded');
+
+                    // Close all other accordions
+                    document.querySelectorAll('.category-accordion.expanded').forEach(acc => {
+                        if (acc !== accordion) {
+                            acc.classList.remove('expanded');
+                        }
+                    });
+
+                    // Toggle current accordion
+                    accordion.classList.toggle('expanded', !isExpanded);
+
+                    // Initialize layout options if opening
+                    if (!isExpanded) {
+                        const category = accordion.dataset.category;
+                        initializeCategoryContent(category);
+                    }
+                });
+            });
+
+            // Initialize layout options for all categories immediately
+            document.querySelectorAll('.category-accordion').forEach(accordion => {
+                const category = accordion.dataset.category;
+                initializeCategoryContent(category);
+            });
+        }
+
+        function setupDragAndDrop() {
+            const accordion = document.getElementById('categories-accordion');
+            let draggedElement = null;
+
+            // Add drag event listeners to each category
+            document.querySelectorAll('.category-accordion').forEach(category => {
+                // Set draggable only when mousedown on handle
+                const handle = category.querySelector('.category-drag-handle');
+
+                handle.addEventListener('mousedown', function () {
+                    category.draggable = true;
+                });
+
+                category.addEventListener('mouseup', function () {
+                    category.draggable = false;
+                });
+
+                category.addEventListener('mouseleave', function () {
+                    category.draggable = false;
+                });
+
+                category.addEventListener('dragstart', function (e) {
+                    draggedElement = this;
+                    this.classList.add('dragging');
+
+                    // Set drag effect
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', this.outerHTML);
+                });
+
+                category.addEventListener('dragend', function () {
+                    this.classList.remove('dragging');
+
+                    // Always update preview when drag ends (regardless of successful drop)
+                    setTimeout(() => {
+                        updatePreview();
+                    }, 100);
+
+                    draggedElement = null;
+                    this.draggable = false;
+                });
+
+                category.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+
+                    // Add visual feedback
+                    const afterElement = getDragAfterElement(accordion, e.clientY);
+                    if (afterElement == null) {
+                        accordion.appendChild(draggedElement);
+                    } else {
+                        accordion.insertBefore(draggedElement, afterElement);
+                    }
+                });
+
+                category.addEventListener('drop', function (e) {
+                    e.preventDefault();
+
+                    // Update preview order after drop
+                    setTimeout(() => {
+                        updatePreview();
+                    }, 50);
+                });
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.category-accordion:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function initializeCategoryContent(category) {
+            console.log('initializeCategoryContent called for:', category);
+            // Add layout option click listeners
+            const accordion = document.querySelector(`[data-category="${category}"]`);
+            const layoutOptions = accordion.querySelectorAll('.layout-option');
+            console.log('Found layout options:', layoutOptions.length);
+
+            layoutOptions.forEach((option, index) => {
+                // Remove existing listener if any
+                option.removeEventListener('click', option._clickHandler);
+
+                // Create new click handler
+                option._clickHandler = () => {
+                    console.log('Layout option clicked:', category, index + 1);
+                    selectCategoryLayout(category, index + 1);
+                };
+                option.addEventListener('click', option._clickHandler);
+            });
+        }
+
+        function selectCategoryLayout(category, layoutNum) {
+
+            // Update visual selection within the specific category accordion
+            const accordion = document.querySelector(`[data-category="${category}"]`);
+
+            if (!accordion) {
+                console.error('Accordion not found for category:', category);
+                return;
+            }
+
+            const layoutOptions = accordion.querySelectorAll('.layout-option');
+
+            layoutOptions.forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            if (layoutOptions[layoutNum - 1]) {
+                layoutOptions[layoutNum - 1].classList.add('selected');
+            }
+
+            // Store current category and layout
+            currentCategory = category;
+            currentLayout = layoutNum;
+
+            // Initialize category data if needed
+            if (!categoriesData[category]) {
+                categoriesData[category] = { layout: currentLayout, data: {} };
+            } else {
+                categoriesData[category].layout = currentLayout;
+                if (!categoriesData[category].data) {
+                    categoriesData[category].data = {};
+                }
+            }
+
+            // Show corresponding fields
+            showLayoutFields(category, layoutNum);
+
+            // Auto-check the category checkbox when a layout is selected
+            const checkbox = document.getElementById(`cat-${category}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+
+            // Update status and preview
+            updateCategoryStatus();
+            updatePreview();
+        }
+
+        function showLayoutFields(category, layoutNum) {
+            const fieldsContainer = document.getElementById(`fields-${category}`);
+
+            if (!fieldsContainer) {
+                console.error('Fields container not found for category:', category);
+                return;
+            }
+
+            // Insert the actual layout fields that were in the original system
+            switch (layoutNum) {
+                case 1:
+                    fieldsContainer.innerHTML = `
+                        <div class="cards-container">
+                            <div class="card-item">
+                                <div class="card-title">Card Único</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout1-${category}-icon">Ícone:</label>
+                                        <input type="text" id="layout1-${category}-icon" class="field-input" placeholder="🛡️" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout1-${category}-title">Título da Oferta:</label>
+                                        <input type="text" id="layout1-${category}-title" class="field-input" placeholder="Previdência" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout1-${category}-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout1-${category}-description" class="field-input" placeholder="Um futuro mais tranquilo" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    
+                                    <div class="field-group">
+                                        <label>Bullets (até 3):</label>
+                                        <div class="bullets-container">
+                                            <div class="bullet-group">
+                                                <label for="layout1-${category}-bullet1-text">Bullet 1:</label>
+                                                <input type="text" id="layout1-${category}-bullet1-text" class="field-input" placeholder="Benefício importante" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                            </div>
+                                            <div class="bullet-group">
+                                                <label for="layout1-${category}-bullet2-text">Bullet 2:</label>
+                                                <input type="text" id="layout1-${category}-bullet2-text" class="field-input" placeholder="Outro benefício" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                            </div>
+                                            <div class="bullet-group">
+                                                <label for="layout1-${category}-bullet3-text">Bullet 3:</label>
+                                                <input type="text" id="layout1-${category}-bullet3-text" class="field-input" placeholder="Terceiro benefício" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="field-group">
+                                        <label for="layout1-${category}-cta">Call to Action:</label>
+                                        <input type="text" id="layout1-${category}-cta" class="field-input" placeholder="Saiba mais" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    
+                                    <div class="field-group">
+                                        <label for="layout1-${category}-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout1-${category}-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 2:
+                    fieldsContainer.innerHTML = `
+                        <div class="cards-container">
+                            <div class="card-item">
+                                <div class="card-title">Card 1 (Principal)</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card1-bg">Imagem de Fundo:</label>
+                                        <input type="text" id="layout2-${category}-card1-bg" class="field-input" placeholder="URL da imagem" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card1-title">Título da Oferta:</label>
+                                        <input type="text" id="layout2-${category}-card1-title" class="field-input" placeholder="Previdência" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card1-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout2-${category}-card1-description" class="field-input" placeholder="Um futuro mais tranquilo" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card1-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout2-${category}-card1-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-item">
+                                <div class="card-title">Card 2 (Secundário)</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card2-icon">Ícone:</label>
+                                        <input type="text" id="layout2-${category}-card2-icon" class="field-input" placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-no-axes-column-increasing-icon lucide-chart-no-axes-column-increasing"><path d="M5 21v-6"/><path d="M12 21V9"/><path d="M19 21V3"/></svg>' oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card2-title">Título da Oferta:</label>
+                                        <input type="text" id="layout2-${category}-card2-title" class="field-input" placeholder="Investimentos" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card2-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout2-${category}-card2-description" class="field-input" placeholder="Rentabilidade garantida" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout2-${category}-card2-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout2-${category}-card2-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 3:
+                    fieldsContainer.innerHTML = `
+                        <div class="cards-container">
+                            <div class="card-item">
+                                <div class="card-title">Card 1 (Laranja - Principal)</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card1-icon">Ícone:</label>
+                                        <input type="text" id="layout3-${category}-card1-icon" class="field-input" placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card1-title">Título da Oferta:</label>
+                                        <input type="text" id="layout3-${category}-card1-title" class="field-input" placeholder="Previdência" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card1-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout3-${category}-card1-description" class="field-input" placeholder="Garanta um futuro tranquilo" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card1-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout3-${category}-card1-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-item">
+                                <div class="card-title">Card 2 (Branco - Esquerdo)</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card2-icon">Ícone:</label>
+                                        <input type="text" id="layout3-${category}-card2-icon" class="field-input" placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card2-title">Título da Oferta:</label>
+                                        <input type="text" id="layout3-${category}-card2-title" class="field-input" placeholder="Assessoria de investimentos" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card2-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout3-${category}-card2-description" class="field-input" placeholder="Otimize o seu rendimento" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card2-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout3-${category}-card2-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-item">
+                                <div class="card-title">Card 3 (Branco - Direito)</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card3-icon">Ícone:</label>
+                                        <input type="text" id="layout3-${category}-card3-icon" class="field-input" placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card3-title">Título da Oferta:</label>
+                                        <input type="text" id="layout3-${category}-card3-title" class="field-input" placeholder="Conta Itaú" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card3-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout3-${category}-card3-description" class="field-input" placeholder="Controle seus rendimentos no mesmo app" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout3-${category}-card3-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout3-${category}-card3-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 4:
+                    fieldsContainer.innerHTML = `
+                        <div class="cards-container">
+                            <div class="card-item">
+                                <div class="card-title">Card 1 (Principal)</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card1-icon">Ícone:</label>
+                                        <input type="text" id="layout4-${category}-card1-icon" class="field-input" placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card1-title">Título da Oferta:</label>
+                                        <input type="text" id="layout4-${category}-card1-title" class="field-input" placeholder="Previdência" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card1-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout4-${category}-card1-description" class="field-input" placeholder="Um futuro mais tranquilo" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card1-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout4-${category}-card1-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card1-blue-bg">Usar cor do segmento:</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" id="layout4-${category}-card1-blue-bg" class="toggle-input" checked oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                            <label for="layout4-${category}-card1-blue-bg" class="toggle-label">
+                                                <span class="toggle-inner"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-item">
+                                <div class="card-title">Card 2</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card2-icon">Ícone:</label>
+                                        <input type="text" id="layout4-${category}-card2-icon" class="field-input" placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card2-title">Título da Oferta:</label>
+                                        <input type="text" id="layout4-${category}-card2-title" class="field-input" placeholder="Investimentos" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card2-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout4-${category}-card2-description" class="field-input" placeholder="Um futuro mais tranquilo" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card2-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout4-${category}-card2-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-item">
+                                <div class="card-title">Card 3</div>
+                                <div class="card-fields">
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card3-icon">Ícone:</label>
+                                        <input type="text" id="layout4-${category}-card3-icon" class="field-input" placeholder='<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card3-title">Título da Oferta:</label>
+                                        <input type="text" id="layout4-${category}-card3-title" class="field-input" placeholder="Cofrinhos" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card3-description">Descrição da Oferta:</label>
+                                        <input type="text" id="layout4-${category}-card3-description" class="field-input" placeholder="Organize suas economias e realize seus planos" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="layout4-${category}-card3-deeplink">Deeplink:</label>
+                                        <input type="text" id="layout4-${category}-card3-deeplink" class="field-input" placeholder="URL do deeplink" oninput="saveCurrentCategoryData(); updateCategoryStatus(); updatePreview();">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                default:
+                    fieldsContainer.innerHTML = `<p>Layout ${layoutNum} em desenvolvimento...</p>`;
+            }
+        }
+
+        function setupScrollBehavior() {
+            const phoneContent = document.getElementById('phone-content');
+            const phoneText = document.getElementById('phone-text');
+            const phoneBackground = document.getElementById('phone-background-overlay');
+            const phoneAvatar = document.querySelector('.phone-avatar');
+            const phoneStickyHeader = document.querySelector('.phone-sticky-header');
+            const phoneInitialContent = document.querySelector('.phone-initial-content');
+
+            phoneContent.addEventListener('scroll', function () {
+                const scrollTop = phoneContent.scrollTop;
+                const initialContentHeight = phoneInitialContent.offsetHeight;
+
+                // Hide main text, background and avatar when scrolling starts
+                // Keep close button visible, move sticky header to top when scrolling
+                if (scrollTop > 0) {
+                    phoneText.classList.add('hidden-on-scroll');
+                    phoneBackground.classList.add('hidden-on-scroll');
+                    phoneAvatar.classList.add('hidden-on-scroll');
+                    phoneStickyHeader.classList.add('scrolled');
+                } else {
+                    phoneText.classList.remove('hidden-on-scroll');
+                    phoneBackground.classList.remove('hidden-on-scroll');
+                    phoneAvatar.classList.remove('hidden-on-scroll');
+                    phoneStickyHeader.classList.remove('scrolled');
+                }
+                
+                // Scroll spy: detectar qual categoria está visível e marcar chip correspondente
+                updateActiveChipOnScroll();
+            });
+        }
+
+        function updateActiveChipOnScroll() {
+            // Não atualizar se foi um clique manual
+            if (isManualChipClick) return;
+            
+            const phoneContent = document.getElementById('phone-content');
+            const categorySections = document.querySelectorAll('[data-category-section]');
+            
+            if (categorySections.length === 0) return;
+            
+            const containerRect = phoneContent.getBoundingClientRect();
+            const containerCenter = containerRect.top + (containerRect.height / 3); // Um terço da altura para detecção
+            
+            let activeCategory = null;
+            
+            // Encontrar qual categoria está mais próxima do centro/topo da tela
+            categorySections.forEach((section, index) => {
+                const sectionRect = section.getBoundingClientRect();
+                const sectionTop = sectionRect.top;
+                const sectionBottom = sectionRect.bottom;
+                
+                // Para a primeira categoria (sem título), ajustar área de detecção
+                const detectionPoint = index === 0 ? containerCenter + 50 : containerCenter;
+                
+                // Se a seção está visível na área de detecção
+                if (sectionTop <= detectionPoint && sectionBottom >= detectionPoint) {
+                    activeCategory = section.getAttribute('data-category-section');
+                }
+            });
+            
+            // Se encontrou uma categoria ativa, marcar o chip correspondente
+            if (activeCategory) {
+                setActiveChip(activeCategory);
+            }
+        }
+
+        function setActiveChip(category) {
+            // Remover seleção de todos os chips
+            document.querySelectorAll('.phone-chip').forEach(chip => {
+                chip.classList.remove('selected');
+                // Reset icon color
+                const svg = chip.querySelector('svg');
+                if (svg) {
+                    const chipCategory = chip.dataset.category;
+                    if (chipCategory && categoriesDefinition[chipCategory]) {
+                        const data = categoriesData[chipCategory];
+                        const isConfigured = data && isLayoutComplete(data.layout, data.data);
+                        svg.setAttribute('stroke', isConfigured ? '#FF6200' : '#4C4C4C');
+                    } else {
+                        svg.setAttribute('stroke', '#4C4C4C');
+                    }
+                }
+            });
+            
+            // Marcar o chip da categoria ativa
+            const activeChip = document.querySelector(`.phone-chip[data-category="${category}"]`);
+            if (activeChip) {
+                activeChip.classList.add('selected');
+                const svg = activeChip.querySelector('svg');
+                if (svg) {
+                    svg.setAttribute('stroke', '#FF6200');
+                }
+                
+                // Fazer scroll horizontal para mostrar o chip ativo
+                scrollChipIntoView(activeChip);
+            }
+        }
+
+        function scrollChipIntoView(chipElement) {
+            const chipsContainer = document.getElementById('phone-chips-header');
+            if (!chipsContainer || !chipElement) return;
+            
+            const containerRect = chipsContainer.getBoundingClientRect();
+            const chipRect = chipElement.getBoundingClientRect();
+            
+            const containerLeft = containerRect.left;
+            const containerRight = containerRect.right;
+            const containerWidth = containerRect.width;
+            
+            const chipLeft = chipRect.left;
+            const chipRight = chipRect.right;
+            const chipWidth = chipRect.width;
+            
+            // Verificar se o chip está totalmente visível
+            const isChipVisible = chipLeft >= containerLeft && chipRight <= containerRight;
+            
+            if (!isChipVisible) {
+                // Calcular posição de scroll necessária
+                const currentScrollLeft = chipsContainer.scrollLeft;
+                let targetScrollLeft = currentScrollLeft;
+                
+                if (chipLeft < containerLeft) {
+                    // Chip está cortado à esquerda - scroll para a esquerda
+                    targetScrollLeft = currentScrollLeft - (containerLeft - chipLeft) - 20; // 20px de padding
+                } else if (chipRight > containerRight) {
+                    // Chip está cortado à direita - scroll para a direita
+                    targetScrollLeft = currentScrollLeft + (chipRight - containerRight) + 20; // 20px de padding
+                }
+                
+                // Fazer scroll suave
+                chipsContainer.scrollTo({
+                    left: Math.max(0, targetScrollLeft),
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function configureCategory(category) {
+            currentCategory = category;
+
+            // Atualizar título usando o novo objeto de categorias
+            const categoryName = categoriesDefinition[category]?.name || category;
+            document.getElementById('config-title').textContent = `Configurando: ${categoryName}`;
+
+            // Mostrar seção de configuração
+            document.getElementById('active-config').classList.remove('hidden');
+
+            // Limpar seleção de layout anterior
+            document.querySelectorAll('.layout-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+
+            // Esconder todos os campos
+            document.querySelectorAll('.fields-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Se já existe configuração para esta categoria, restaurar
+            if (categoriesData[category]) {
+                selectLayout(categoriesData[category].layout);
+                populateFields(categoriesData[category].layout, categoriesData[category].data);
+            }
+        }
+
+        function cancelConfiguration() {
+            currentCategory = null;
+            currentLayout = null;
+            document.getElementById('active-config').classList.add('hidden');
+        }
+
+        function selectLayout(layout) {
+            currentLayout = layout;
+
+            // Atualizar seleção visual
+            document.querySelectorAll('.layout-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`.layout-${layout}`).classList.add('selected');
+
+            // Esconder todos os campos
+            document.querySelectorAll('.fields-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Mostrar campos do layout selecionado
+            const fieldsSection = document.getElementById(`fields-layout-${layout}`);
+            if (fieldsSection) {
+                fieldsSection.classList.remove('hidden');
+            }
+
+            // Salvar layout na categoria atual
+            if (currentCategory) {
+                if (!categoriesData[currentCategory]) {
+                    categoriesData[currentCategory] = { layout: layout, data: {} };
+                } else {
+                    categoriesData[currentCategory].layout = layout;
+                }
+
+                // Carregar dados existentes se houver
+                if (categoriesData[currentCategory].data) {
+                    populateFields(layout, categoriesData[currentCategory].data);
+                }
+            }
+        }
+
+        function saveCurrentCategoryData() {
+            if (!currentCategory || !currentLayout) return;
+
+            const data = collectFieldData(currentLayout);
+
+            if (!categoriesData[currentCategory]) {
+                categoriesData[currentCategory] = { layout: currentLayout, data: {} };
+            }
+
+            categoriesData[currentCategory].data = data;
+        }
+
+        function collectFieldData(layout) {
+            const layoutNum = typeof layout === 'string' ? parseInt(layout.replace('layout', '')) : layout;
+
+            switch (layoutNum) {
+                case 1:
+                    return {
+                        icon: document.getElementById(`layout1-${currentCategory}-icon`)?.value || '',
+                        title: document.getElementById(`layout1-${currentCategory}-title`)?.value || '',
+                        description: document.getElementById(`layout1-${currentCategory}-description`)?.value || '',
+                        bullets: [
+                            { text: document.getElementById(`layout1-${currentCategory}-bullet1-text`)?.value || '' },
+                            { text: document.getElementById(`layout1-${currentCategory}-bullet2-text`)?.value || '' },
+                            { text: document.getElementById(`layout1-${currentCategory}-bullet3-text`)?.value || '' }
+                        ],
+                        cta: document.getElementById(`layout1-${currentCategory}-cta`)?.value || '',
+                        deeplink: document.getElementById(`layout1-${currentCategory}-deeplink`)?.value || ''
+                    };
+                case 2:
+                    return {
+                        card1: {
+                            bg: document.getElementById(`layout2-${currentCategory}-card1-bg`)?.value || '',
+                            title: document.getElementById(`layout2-${currentCategory}-card1-title`)?.value || '',
+                            description: document.getElementById(`layout2-${currentCategory}-card1-description`)?.value || '',
+                            deeplink: document.getElementById(`layout2-${currentCategory}-card1-deeplink`)?.value || ''
+                        },
+                        card2: {
+                            icon: document.getElementById(`layout2-${currentCategory}-card2-icon`)?.value || '',
+                            title: document.getElementById(`layout2-${currentCategory}-card2-title`)?.value || '',
+                            description: document.getElementById(`layout2-${currentCategory}-card2-description`)?.value || '',
+                            deeplink: document.getElementById(`layout2-${currentCategory}-card2-deeplink`)?.value || ''
+                        }
+                    };
+                case 3:
+                    return {
+                        card1: {
+                            icon: document.getElementById(`layout3-${currentCategory}-card1-icon`)?.value || '',
+                            title: document.getElementById(`layout3-${currentCategory}-card1-title`)?.value || '',
+                            description: document.getElementById(`layout3-${currentCategory}-card1-description`)?.value || '',
+                            deeplink: document.getElementById(`layout3-${currentCategory}-card1-deeplink`)?.value || ''
+                        },
+                        card2: {
+                            icon: document.getElementById(`layout3-${currentCategory}-card2-icon`)?.value || '',
+                            title: document.getElementById(`layout3-${currentCategory}-card2-title`)?.value || '',
+                            description: document.getElementById(`layout3-${currentCategory}-card2-description`)?.value || '',
+                            deeplink: document.getElementById(`layout3-${currentCategory}-card2-deeplink`)?.value || ''
+                        },
+                        card3: {
+                            icon: document.getElementById(`layout3-${currentCategory}-card3-icon`)?.value || '',
+                            title: document.getElementById(`layout3-${currentCategory}-card3-title`)?.value || '',
+                            description: document.getElementById(`layout3-${currentCategory}-card3-description`)?.value || '',
+                            deeplink: document.getElementById(`layout3-${currentCategory}-card3-deeplink`)?.value || ''
+                        }
+                    };
+                case 4:
+                    return {
+                        card1: {
+                            icon: document.getElementById(`layout4-${currentCategory}-card1-icon`)?.value || '',
+                            title: document.getElementById(`layout4-${currentCategory}-card1-title`)?.value || '',
+                            description: document.getElementById(`layout4-${currentCategory}-card1-description`)?.value || '',
+                            deeplink: document.getElementById(`layout4-${currentCategory}-card1-deeplink`)?.value || '',
+                            blueBg: document.getElementById(`layout4-${currentCategory}-card1-blue-bg`)?.checked ?? true
+                        },
+                        card2: {
+                            icon: document.getElementById(`layout4-${currentCategory}-card2-icon`)?.value || '',
+                            title: document.getElementById(`layout4-${currentCategory}-card2-title`)?.value || '',
+                            description: document.getElementById(`layout4-${currentCategory}-card2-description`)?.value || '',
+                            deeplink: document.getElementById(`layout4-${currentCategory}-card2-deeplink`)?.value || ''
+                        },
+                        card3: {
+                            icon: document.getElementById(`layout4-${currentCategory}-card3-icon`)?.value || '',
+                            title: document.getElementById(`layout4-${currentCategory}-card3-title`)?.value || '',
+                            description: document.getElementById(`layout4-${currentCategory}-card3-description`)?.value || '',
+                            deeplink: document.getElementById(`layout4-${currentCategory}-card3-deeplink`)?.value || ''
+                        }
+                    };
+                default:
+                    return {};
+            }
+        }
+
+        function populateFields(layout, data) {
+            const layoutNum = typeof layout === 'string' ? parseInt(layout.replace('layout', '')) : layout;
+            switch (layoutNum) {
+                case 1:
+                    document.getElementById(`layout1-${currentCategory}-icon`).value = data.icon || '';
+                    document.getElementById(`layout1-${currentCategory}-title`).value = data.title || '';
+                    document.getElementById(`layout1-${currentCategory}-description`).value = data.description || '';
+                    if (data.bullets && data.bullets.length > 0) {
+                        document.getElementById(`layout1-${currentCategory}-bullet1-text`).value = data.bullets[0]?.text || '';
+                    }
+                    if (data.bullets && data.bullets.length > 1) {
+                        document.getElementById(`layout1-${currentCategory}-bullet2-text`).value = data.bullets[1]?.text || '';
+                    }
+                    if (data.bullets && data.bullets.length > 2) {
+                        document.getElementById(`layout1-${currentCategory}-bullet3-text`).value = data.bullets[2]?.text || '';
+                    }
+                    document.getElementById(`layout1-${currentCategory}-cta`).value = data.cta || '';
+                    document.getElementById(`layout1-${currentCategory}-deeplink`).value = data.deeplink || '';
+                    break;
+                case 4:
+                    if (data.card1) {
+                        document.getElementById(`layout4-${currentCategory}-card1-icon`).value = data.card1.icon || '';
+                        document.getElementById(`layout4-${currentCategory}-card1-title`).value = data.card1.title || '';
+                        document.getElementById(`layout4-${currentCategory}-card1-description`).value = data.card1.description || '';
+                        document.getElementById(`layout4-${currentCategory}-card1-deeplink`).value = data.card1.deeplink || '';
+                        document.getElementById(`layout4-${currentCategory}-card1-blue-bg`).checked = data.card1.blueBg ?? true;
+                    }
+                    if (data.card2) {
+                        document.getElementById(`layout4-${currentCategory}-card2-icon`).value = data.card2.icon || '';
+                        document.getElementById(`layout4-${currentCategory}-card2-title`).value = data.card2.title || '';
+                        document.getElementById(`layout4-${currentCategory}-card2-description`).value = data.card2.description || '';
+                        document.getElementById(`layout4-${currentCategory}-card2-deeplink`).value = data.card2.deeplink || '';
+                    }
+                    if (data.card3) {
+                        document.getElementById(`layout4-${currentCategory}-card3-icon`).value = data.card3.icon || '';
+                        document.getElementById(`layout4-${currentCategory}-card3-title`).value = data.card3.title || '';
+                        document.getElementById(`layout4-${currentCategory}-card3-description`).value = data.card3.description || '';
+                        document.getElementById(`layout4-${currentCategory}-card3-deeplink`).value = data.card3.deeplink || '';
+                    }
+                    break;
+                case 2:
+                    if (data.card1) {
+                        document.getElementById(`layout2-${currentCategory}-card1-bg`).value = data.card1.bg || '';
+                        document.getElementById(`layout2-${currentCategory}-card1-title`).value = data.card1.title || '';
+                        document.getElementById(`layout2-${currentCategory}-card1-description`).value = data.card1.description || '';
+                        document.getElementById(`layout2-${currentCategory}-card1-deeplink`).value = data.card1.deeplink || '';
+                    }
+                    if (data.card2) {
+                        document.getElementById(`layout2-${currentCategory}-card2-icon`).value = data.card2.icon || '';
+                        document.getElementById(`layout2-${currentCategory}-card2-title`).value = data.card2.title || '';
+                        document.getElementById(`layout2-${currentCategory}-card2-description`).value = data.card2.description || '';
+                        document.getElementById(`layout2-${currentCategory}-card2-deeplink`).value = data.card2.deeplink || '';
+                    }
+                    break;
+                case 3:
+                    if (data.categoryTitle !== undefined) {
+                    }
+                    if (data.card1) {
+                        document.getElementById(`layout3-${currentCategory}-card1-icon`).value = data.card1.icon || '';
+                        document.getElementById(`layout3-${currentCategory}-card1-title`).value = data.card1.title || '';
+                        document.getElementById(`layout3-${currentCategory}-card1-description`).value = data.card1.description || '';
+                        document.getElementById(`layout3-${currentCategory}-card1-deeplink`).value = data.card1.deeplink || '';
+                    }
+                    if (data.card2) {
+                        document.getElementById(`layout3-${currentCategory}-card2-icon`).value = data.card2.icon || '';
+                        document.getElementById(`layout3-${currentCategory}-card2-title`).value = data.card2.title || '';
+                        document.getElementById(`layout3-${currentCategory}-card2-description`).value = data.card2.description || '';
+                        document.getElementById(`layout3-${currentCategory}-card2-deeplink`).value = data.card2.deeplink || '';
+                    }
+                    if (data.card3) {
+                        document.getElementById(`layout3-${currentCategory}-card3-icon`).value = data.card3.icon || '';
+                        document.getElementById(`layout3-${currentCategory}-card3-title`).value = data.card3.title || '';
+                        document.getElementById(`layout3-${currentCategory}-card3-description`).value = data.card3.description || '';
+                        document.getElementById(`layout3-${currentCategory}-card3-deeplink`).value = data.card3.deeplink || '';
+                    }
+                    break;
+            }
+        }
+
+        function updateCategoryStatus() {
+            Object.keys(categoriesDefinition).forEach(category => {
+                const statusElement = document.getElementById(`status-${category}`);
+                const data = categoriesData[category];
+
+                if (data && isLayoutComplete(data.layout, data.data)) {
+                    statusElement.textContent = `Layout ${data.layout}`;
+                    statusElement.className = 'status-badge configured';
+                } else {
+                    statusElement.textContent = 'Vazio';
+                    statusElement.className = 'status-badge empty';
+                }
+            });
+        }
+
+        function isLayoutComplete(layout, data) {
+            if (!data) return false;
+
+            switch (layout) {
+                case 1:
+                    if (!data.icon || !data.icon.trim()) return false;
+                    if (!data.title || !data.title.trim()) return false;
+                    if (!data.description || !data.description.trim()) return false;
+                    if (!data.cta || !data.cta.trim()) return false;
+                    // Pelo menos 1 bullet deve estar preenchido
+                    const validBullets = data.bullets?.filter(bullet =>
+                        bullet.text && bullet.text.trim()
+                    ) || [];
+                    if (validBullets.length === 0) return false;
+                    return true;
+                case 4:
+                    if (!data.card1?.icon || !data.card1.icon.trim()) return false;
+                    if (!data.card1?.title || !data.card1.title.trim()) return false;
+                    if (!data.card1?.description || !data.card1.description.trim()) return false;
+                    if (!data.card2?.icon || !data.card2.icon.trim()) return false;
+                    if (!data.card2?.title || !data.card2.title.trim()) return false;
+                    if (!data.card2?.description || !data.card2.description.trim()) return false;
+                    if (!data.card3?.icon || !data.card3.icon.trim()) return false;
+                    if (!data.card3?.title || !data.card3.title.trim()) return false;
+                    if (!data.card3?.description || !data.card3.description.trim()) return false;
+                    return true;
+                case 2:
+                    if (!data.card1?.title || !data.card1.title.trim()) return false;
+                    if (!data.card1?.description || !data.card1.description.trim()) return false;
+                    if (!data.card2?.icon || !data.card2.icon.trim()) return false;
+                    if (!data.card2?.title || !data.card2.title.trim()) return false;
+                    if (!data.card2?.description || !data.card2.description.trim()) return false;
+                    return true;
+                case 3:
+                    if (!data.card1?.icon || !data.card1.icon.trim()) return false;
+                    if (!data.card1?.title || !data.card1.title.trim()) return false;
+                    if (!data.card1?.description || !data.card1.description.trim()) return false;
+                    if (!data.card2?.icon || !data.card2.icon.trim()) return false;
+                    if (!data.card2?.title || !data.card2.title.trim()) return false;
+                    if (!data.card2?.description || !data.card2.description.trim()) return false;
+                    if (!data.card3?.icon || !data.card3.icon.trim()) return false;
+                    if (!data.card3?.title || !data.card3.title.trim()) return false;
+                    if (!data.card3?.description || !data.card3.description.trim()) return false;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        function updatePreview() {
+            // Atualizar background
+            const backgroundImage = document.getElementById('background-image').value;
+            const backgroundOverlay = document.getElementById('phone-background-overlay');
+            if (backgroundImage) {
+                backgroundOverlay.style.backgroundImage = `url('${backgroundImage}')`;
+            } else {
+                backgroundOverlay.style.backgroundImage = '';
+            }
+
+            // Atualizar texto principal
+            const mainText = document.getElementById('main-text').value || 'Configure o texto principal para ver o preview aqui.';
+            document.getElementById('phone-text').textContent = mainText;
+
+            // Atualizar chips das categorias
+            updateCategoryChips();
+
+            // Atualizar ofertas
+            updateOffersPreview();
+        }
+
+        function updateCategoryChips() {
+            const chipsContainer = document.getElementById('phone-chips-header');
+            chipsContainer.innerHTML = '';
+
+            // Verificar quais categorias estão marcadas (checkboxes) na ordem do accordion
+            const selectedCategories = [];
+            const accordionCategories = [...document.querySelectorAll('.category-accordion')].map(acc => acc.dataset.category);
+
+            accordionCategories.forEach(category => {
+                const checkbox = document.getElementById(`cat-${category}`);
+                if (checkbox && checkbox.checked) {
+                    selectedCategories.push(category);
+                }
+            });
+
+            // Mostrar chips das categorias selecionadas
+            selectedCategories.forEach(category => {
+                const chip = document.createElement('div');
+                const data = categoriesData[category];
+                const isConfigured = data && isLayoutComplete(data.layout, data.data);
+
+                chip.className = isConfigured ? 'phone-chip active' : 'phone-chip';
+
+                // Create target icon with conditional coloring using category definition
+                const iconColor = isConfigured ? '#FF6200' : '#4C4C4C';
+                const categoryIcon = categoriesDefinition[category]?.icon?.replace('stroke="currentColor"', `stroke="${iconColor}"`) ||
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
+
+                chip.innerHTML = `${categoryIcon} ${categoriesDefinition[category]?.name || category}`;
+                chip.dataset.category = category;
+                chip.style.cursor = 'pointer';
+
+                // Adicionar event listener para clique
+                chip.addEventListener('click', function () {
+                    handleChipClick(category, chip);
+                });
+
+                chipsContainer.appendChild(chip);
+            });
+
+            // Se não há categorias selecionadas, mostrar chips padrão
+            if (selectedCategories.length === 0) {
+                const chip1 = document.createElement('div');
+                chip1.className = 'phone-chip';
+                // Use first category icon as default or fallback target icon
+                const firstCategory = Object.keys(categoriesDefinition)[0];
+                const defaultIcon = categoriesDefinition[firstCategory]?.icon?.replace('stroke="currentColor"', 'stroke="#4C4C4C"') ||
+                    `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4C4C4C" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
+                chip1.innerHTML = `${defaultIcon} Selecione interesses para preview aqui`;
+                chipsContainer.appendChild(chip1);
+
+            }
+
+            // Sempre adicionar o chip de edição no final
+            const editChip = document.createElement('div');
+            editChip.className = 'phone-chip edit';
+            editChip.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17 3C17.2626 2.73735 17.5744 2.52901 17.9176 2.38687C18.2608 2.24473 18.6286 2.17157 19 2.17157C19.3714 2.17157 19.7392 2.24473 20.0824 2.38687C20.4256 2.52901 20.7374 2.73735 21 3C21.2626 3.26264 21.471 3.57444 21.6131 3.9176C21.7553 4.26077 21.8284 4.62856 21.8284 5C21.8284 5.37143 21.7553 5.73923 21.6131 6.08239C21.471 6.42555 21.2626 6.73735 21 7L7.5 20.5L2 22L3.5 16.5L17 3Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            `;
+            chipsContainer.appendChild(editChip);
+        }
+
+        let isManualChipClick = false;
+
+        function handleChipClick(category, clickedChip) {
+            // Definir flag para prevenir interferência do scroll spy
+            isManualChipClick = true;
+            
+            // Remover seleção de todos os chips e resetar cor dos ícones
+            document.querySelectorAll('.phone-chip').forEach(chip => {
+                chip.classList.remove('selected');
+                // Reset icon color based on configuration status
+                const svg = chip.querySelector('svg');
+                if (svg) {
+                    const category = chip.dataset.category;
+                    if (category && categoriesDefinition[category]) {
+                        const data = categoriesData[category];
+                        const isConfigured = data && isLayoutComplete(data.layout, data.data);
+                        svg.setAttribute('stroke', isConfigured ? '#FF6200' : '#4C4C4C');
+                    } else {
+                        // Default chips
+                        svg.setAttribute('stroke', '#4C4C4C');
+                    }
+                }
+            });
+
+            // Adicionar seleção ao chip clicado e mudar cor do ícone
+            clickedChip.classList.add('selected');
+            const selectedSvg = clickedChip.querySelector('svg');
+            if (selectedSvg) {
+                selectedSvg.setAttribute('stroke', '#FF6200');
+            }
+            
+            // Fazer scroll horizontal para mostrar o chip clicado (se necessário)
+            scrollChipIntoView(clickedChip);
+
+            // Fazer scroll para a seção da categoria correspondente
+            const categorySection = document.querySelector(`[data-category-section="${category}"]`);
+            const phoneContent = document.getElementById('phone-content');
+
+            if (categorySection && phoneContent) {
+                // Obter a posição da seção da categoria no container
+                let targetElement = categorySection;
+
+                // Tentar encontrar um elemento mais específico (título da categoria)
+                const categoryTitle = categorySection.querySelector('.layout1-title, .layout2-title, .layout3-title, .layout4-title');
+                
+                // Se o título existe e está visível, usar ele como target
+                if (categoryTitle && window.getComputedStyle(categoryTitle).display !== 'none') {
+                    targetElement = categoryTitle;
+                } else {
+                    // Se o título está oculto (primeira categoria), usar o primeiro card/elemento visível
+                    const firstCard = categorySection.querySelector('.layout1-card, .layout2-card1, .layout3-card1, .layout4-card1');
+                    if (firstCard) {
+                        targetElement = firstCard;
+                    }
+                }
+
+                // Calcular posição usando getBoundingClientRect de forma mais simples
+                const containerRect = phoneContent.getBoundingClientRect();
+                const targetRect = targetElement.getBoundingClientRect();
+
+                // Posição relativa do elemento target em relação ao container
+                const relativePosition = targetRect.top - containerRect.top;
+
+                // Usar offset fixo que funciona bem para todas as categorias
+                const offset = 140;
+
+                // Scroll atual + posição relativa - offset
+                const scrollPosition = phoneContent.scrollTop + relativePosition - offset;
+
+                phoneContent.scrollTo({
+                    top: Math.max(0, scrollPosition),
+                    behavior: 'smooth'
+                });
+                
+                // Resetar flag após o scroll terminar
+                setTimeout(() => {
+                    isManualChipClick = false;
+                }, 800);
+            }
+        }
+
+        function updateOffersPreview() {
+            const offersContainer = document.getElementById('phone-offers');
+            offersContainer.innerHTML = '';
+
+            let hasOffers = false;
+
+            // Get categories in the order they appear in the accordion (after drag/drop)
+            const accordionCategories = [...document.querySelectorAll('.category-accordion')].map(acc => acc.dataset.category);
+
+            // Verificar quais categorias estão marcadas (checkboxes) na ordem do accordion
+            accordionCategories.forEach(category => {
+                const checkbox = document.getElementById(`cat-${category}`);
+                const data = categoriesData[category];
+
+                // Mostrar se a categoria está marcada E tem um layout selecionado
+                if (checkbox && checkbox.checked && data && data.layout) {
+                    hasOffers = true;
+
+                    // Usar nomes das categorias do objeto definição
+
+                    // Criar seção da categoria com data attribute
+                    const categorySection = document.createElement('div');
+                    categorySection.setAttribute('data-category-section', category);
+                    categorySection.style.marginBottom = '24px';
+
+                    // Adicionar o conteúdo da oferta
+                    const offerContent = document.createElement('div');
+                    offerContent.innerHTML = generateOfferPreviewWithPlaceholders(data.layout, data.data || {}, category);
+                    categorySection.appendChild(offerContent);
+
+                    offersContainer.appendChild(categorySection);
+                }
+            });
+
+            if (!hasOffers) {
+                offersContainer.innerHTML = `
+                    <div class="preview-message">
+                        <div class="preview-message-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package-plus-icon lucide-package-plus">
+                                <path d="M16 16h6"/>
+                                <path d="M19 13v6"/>
+                                <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/>
+                                <path d="m7.5 4.27 9 5.15"/>
+                                <polyline points="3.29 7 12 12 20.71 7"/>
+                                <line x1="12" x2="12" y1="22" y2="12"/>
+                            </svg>
+                        </div>
+                        <h3 class="preview-message-title">Nenhum produto configurado</h3>
+                        <p class="preview-message-subtitle">Adicione produtos em uma categoria para ver o preview aqui</p>
+                    </div>
+                `;
+            }
+
+            // Control footer spacing based on whether categories are configured
+            const phoneContent = document.getElementById('phone-content');
+            if (hasOffers) {
+                phoneContent.classList.add('has-categories');
+            } else {
+                phoneContent.classList.remove('has-categories');
+            }
+        }
+
+        function generateOfferPreviewWithPlaceholders(layout, data, category) {
+            const layoutNum = typeof layout === 'string' ? parseInt(layout.replace('layout', '')) : layout;
+
+            switch (layoutNum) {
+                case 1:
+                    return generateLayout1PreviewWithPlaceholders(data, category);
+                case 2:
+                    return generateLayout2PreviewWithPlaceholders(data, category);
+                case 3:
+                    return generateLayout3PreviewWithPlaceholders(data, category);
+                case 4:
+                    return generateLayout4PreviewWithPlaceholders(data, category);
+                default:
+                    return '<div class="preview-message">Layout em desenvolvimento</div>';
+            }
+        }
+
+        function generateLayout1PreviewWithPlaceholders(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+            const icon = data.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-icon lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>';
+            const title = data.title || 'Título da Oferta';
+            const description = data.description || 'Descrição da oferta';
+            const cta = data.cta || 'Saiba mais';
+
+            // Filtrar bullets válidos (somente com texto preenchido)
+            const validBullets = data.bullets?.filter(bullet =>
+                bullet.text && bullet.text.trim()
+            ) || [];
+
+            // Se não há bullets válidos, mostrar placeholders
+            const bulletsToShow = validBullets.length > 0 ? validBullets : [
+                { text: 'Benefício importante' },
+                { text: 'Outro benefício' },
+                { text: 'Terceiro benefício' }
+            ];
+
+            const bulletsHtml = bulletsToShow.map(bullet => `
+                <div class="layout1-bullet">
+                    <div class="layout1-bullet-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#495057" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-icon lucide-check"><path d="M20 6 9 17l-5-5"/></svg>
+                    </div>
+                    <div class="layout1-bullet-text">${bullet.text}</div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="layout1-container">
+                    <div class="layout1-title">${categoryTitle}</div>
+                    <div class="layout1-card">
+                        <div class="layout1-card-icon">${icon}</div>
+                        <div class="layout1-card-content">
+                            <div class="layout1-card-title">${title}</div>
+                            <div class="layout1-card-description">${description}</div>
+                            <div class="layout1-bullets">
+                                ${bulletsHtml}
+                            </div>
+                            <div class="layout1-cta">
+                                <span class="layout1-cta-text">${cta}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B3B3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateLayout2PreviewWithPlaceholders(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+            const card1Bg = data.card1?.bg || '';
+            const card1Title = data.card1?.title || 'Título da Oferta';
+            const card1Description = data.card1?.description || 'Descrição da oferta';
+            const card2Icon = data.card2?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+            const card2Title = data.card2?.title || 'Título da Oferta';
+            const card2Description = data.card2?.description || 'Descrição da oferta';
+
+            return `
+                <div class="layout2-container">
+                    <div class="layout2-title">${categoryTitle}</div>
+                    <div class="layout2-content">
+                        <div class="layout2-card1" ${card1Bg ? `style="background-image: url('${card1Bg}')"` : ''}>
+                            <div class="layout2-card1-content">
+                                <div class="layout2-card1-text">
+                                    <div class="layout2-card1-title">${card1Title}</div>
+                                    <div class="layout2-card1-description">${card1Description}</div>
+                                </div>
+                            </div>
+                            <div class="layout2-card1-arrow">›</div>
+                        </div>
+                        
+                        <div class="layout2-card2">
+                            <div class="layout2-card2-icon">${card2Icon}</div>
+                            <div class="layout2-card2-content">
+                                <div class="layout2-card2-text">
+                                    <div class="layout2-card2-title">${card2Title}</div>
+                                    <div class="layout2-card2-description">${card2Description}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateLayout3PreviewWithPlaceholders(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+
+            return `
+                <div class="layout3-container">
+                    <div class="layout3-title">${categoryTitle}</div>
+                    <div class="layout3-card1">
+                        <div class="layout3-card1-icon">${data.card1?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'}</div>
+                        <div class="layout3-card1-content">
+                            <div class="layout3-card1-text">
+                                <div class="layout3-card1-title">${data.card1?.title || 'Título da Oferta'}</div>
+                                <div class="layout3-card1-description">${data.card1?.description || 'Descrição da oferta'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layout3-cards-row">
+                        <div class="layout3-card2">
+                            <div class="layout3-card2-icon">${data.card2?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'}</div>
+                            <div class="layout3-card2-content">
+                                <div class="layout3-card2-title">${data.card2?.title || 'Título da Oferta'}</div>
+                                <div class="layout3-card2-description">
+                                    <span>${data.card2?.description || 'Descrição da oferta'}</span>
+                                    <div class="layout3-card2-chevron"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B3B3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layout3-card3">
+                            <div class="layout3-card3-icon">${data.card3?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'}</div>
+                            <div class="layout3-card3-content">
+                                <div class="layout3-card3-title">${data.card3?.title || 'Título da Oferta'}</div>
+                                <div class="layout3-card3-description">
+                                    <span>${data.card3?.description || 'Descrição da oferta'}</span>
+                                    <div class="layout3-card3-chevron"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B3B3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateLayout4PreviewWithPlaceholders(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+
+            return `
+                <div class="layout4-container">
+                    <div class="layout4-title">${categoryTitle}</div>
+                    <div class="layout4-card1${data.card1?.blueBg === false ? ' white-bg' : ''}">
+                        <div class="layout4-card1-icon">${data.card1?.icon || (data.card1?.blueBg === false ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>')}</div>
+                        <div class="layout4-card1-content">
+                            <div class="layout4-card1-text">
+                                <div class="layout4-card1-title">${data.card1?.title || 'Título da Oferta'}</div>
+                                <div class="layout4-card1-description">${data.card1?.description || 'Descrição da oferta'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="layout4-card">
+                        <div class="layout4-card-icon">${data.card2?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'}</div>
+                        <div class="layout4-card-content">
+                            <div class="layout4-card-footer">
+                                <div class="layout4-card-text">
+                                    <div class="layout4-card-title">${data.card2?.title || 'Título da Oferta'}</div>
+                                    <div class="layout4-card-description">${data.card2?.description || 'Descrição da oferta'}</div>
+                                </div>
+                                <div class="layout4-card-arrow">›</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="layout4-card">
+                        <div class="layout4-card-icon">${data.card3?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'}</div>
+                        <div class="layout4-card-content">
+                            <div class="layout4-card-footer">
+                                <div class="layout4-card-text">
+                                    <div class="layout4-card-title">${data.card3?.title || 'Título da Oferta'}</div>
+                                    <div class="layout4-card-description">${data.card3?.description || 'Descrição da oferta'}</div>
+                                </div>
+                                <div class="layout4-card-arrow">›</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateOfferPreview(layout, data, category) {
+            switch (layout) {
+                case 1:
+                    return generateLayout1Preview(data, category);
+                case 2:
+                    return generateLayout2Preview(data, category);
+                case 3:
+                    return generateLayout3Preview(data, category);
+                case 4:
+                    return generateLayout4Preview(data, category);
+                default:
+                    return '<div class="preview-message">Layout não implementado</div>';
+            }
+        }
+
+        function generateLayout1Preview(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+            const icon = data.icon || '🛡️';
+            const title = data.title || 'Título da Oferta';
+            const description = data.description || 'Descrição da oferta';
+            const cta = data.cta || 'Call to Action';
+
+            // Filtrar bullets válidos (com ícone e texto)
+            const validBullets = data.bullets?.filter(bullet =>
+                bullet.icon && bullet.icon.trim() && bullet.text && bullet.text.trim()
+            ) || [];
+
+            const bulletsHtml = validBullets.map(bullet => `
+                <div class="layout1-bullet">
+                    <div class="layout1-bullet-icon">${bullet.icon}</div>
+                    <div class="layout1-bullet-text">${bullet.text}</div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="layout1-container">
+                    <div class="layout1-title">${categoryTitle}</div>
+                    
+                    <div class="layout1-card">
+                        <div class="layout1-card-icon">${icon}</div>
+                        <div class="layout1-card-content">
+                            <div class="layout1-card-title">${title}</div>
+                            <div class="layout1-card-description">${description}</div>
+                            
+                            <div class="layout1-bullets">
+                                ${bulletsHtml}
+                            </div>
+                            
+                            <div class="layout1-cta">
+                                <span>${cta}</span>
+                                <div class="layout1-cta-arrow">›</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateLayout2Preview(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+
+            const card1Bg = data.card1?.bg || 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=400&q=80';
+            const card1Title = data.card1?.title || 'Título';
+            const card1Description = data.card1?.description || 'Descrição da oferta';
+
+            const card2Icon = data.card2?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+            const card2Title = data.card2?.title || 'Título';
+            const card2Description = data.card2?.description || 'Descrição da oferta';
+
+            return `
+                <div class="layout2-container">
+                    <div class="layout2-title">${categoryTitle}</div>
+                    <div class="layout2-card1" style="background-image: url('${card1Bg}')">
+                        <div class="layout2-card1-content">
+                            <div class="layout2-card1-text">
+                                <div class="layout2-card1-title">${card1Title}</div>
+                                <div class="layout2-card1-description">${card1Description}</div>
+                            </div>
+                            <div class="layout2-card1-arrow">›</div>
+                        </div>
+                    </div>
+                    
+                    <div class="layout2-card2">
+                        <div class="layout2-card2-icon">${card2Icon}</div>
+                        <div class="layout2-card2-content">
+                            <div class="layout2-card2-text">
+                                <div class="layout2-card2-title">${card2Title}</div>
+                                <div class="layout2-card2-description">${card2Description}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateLayout3Preview(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+
+            const card1Icon = data.card1?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+            const card1Title = data.card1?.title || 'Título';
+            const card1Description = data.card1?.description || 'Descrição';
+
+            const card2Icon = data.card2?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+            const card2Title = data.card2?.title || 'Título';
+            const card2Description = data.card2?.description || 'Descrição';
+
+            const card3Icon = data.card3?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+            const card3Title = data.card3?.title || 'Título';
+            const card3Description = data.card3?.description || 'Descrição';
+
+            return `
+                <div class="layout3-container">
+                    <div class="layout3-title">${categoryTitle}</div>
+                    
+                    <div class="layout3-card1">
+                        <div class="layout3-card1-icon">${card1Icon}</div>
+                        <div class="layout3-card1-content">
+                            <div class="layout3-card1-title">${card1Title}</div>
+                            <div class="layout3-card1-description">${card1Description}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="layout3-cards-row">
+                        <div class="layout3-card">
+                            <div class="layout3-card-icon">${card2Icon}</div>
+                            <div class="layout3-card-content">
+                                <div class="layout3-card-title">${card2Title}</div>
+                                <div class="layout3-card-description">
+                                    <span>${card2Description}</span>
+                                    <div class="layout3-card-chevron"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B3B3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="layout3-card">
+                            <div class="layout3-card-icon">${card3Icon}</div>
+                            <div class="layout3-card-content">
+                                <div class="layout3-card-title">${card3Title}</div>
+                                <div class="layout3-card-description">
+                                    <span>${card3Description}</span>
+                                    <div class="layout3-card-chevron"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B3B3B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateLayout4Preview(data, category) {
+            const categoryTitle = categoriesDefinition[category]?.name || category;
+
+            const card1Icon = data.card1?.icon || (data.card1?.blueBg === false ? '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#feffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>');
+            const card1Title = data.card1?.title || 'Título';
+            const card1Description = data.card1?.description || 'Descrição';
+
+            const card2Icon = data.card2?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+            const card2Title = data.card2?.title || 'Título';
+            const card2Description = data.card2?.description || 'Descrição';
+
+            const card3Icon = data.card3?.icon || '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-target-icon lucide-target"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>';
+            const card3Title = data.card3?.title || 'Título';
+            const card3Description = data.card3?.description || 'Descrição';
+
+            return `
+                <div class="layout4-container">
+                    <div class="layout4-title">${categoryTitle}</div>
+                    
+                    <div class="layout4-card1${data.card1?.blueBg === false ? ' white-bg' : ''}">
+                        <div class="layout4-card1-icon">${card1Icon}</div>
+                        <div class="layout4-card1-content">
+                            <div class="layout4-card1-text">
+                                <div class="layout4-card1-title">${card1Title}</div>
+                                <div class="layout4-card1-description">${card1Description}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="layout4-card">
+                        <div class="layout4-card-icon">${card2Icon}</div>
+                        <div class="layout4-card-content">
+                            <div class="layout4-card-footer">
+                                <div class="layout4-card-text">
+                                    <div class="layout4-card-title">${card2Title}</div>
+                                    <div class="layout4-card-description">${card2Description}</div>
+                                </div>
+                                <div class="layout4-card-arrow">›</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="layout4-card">
+                        <div class="layout4-card-icon">${card3Icon}</div>
+                        <div class="layout4-card-content">
+                            <div class="layout4-card-footer">
+                                <div class="layout4-card-text">
+                                    <div class="layout4-card-title">${card3Title}</div>
+                                    <div class="layout4-card-description">${card3Description}</div>
+                                </div>
+                                <div class="layout4-card-arrow">›</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateFooterPreview() {
+            const footerTitle = document.getElementById('footer-title').value || 'Título do Footer';
+            const cardTitle = document.getElementById('footer-card-title').value || 'Título da Oferta';
+
+            document.getElementById('footer-title-preview').textContent = footerTitle;
+            document.querySelector('.footer-card-title').textContent = cardTitle;
+        }
+    </script>
+</body>
+
+</html>
